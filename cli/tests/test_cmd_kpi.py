@@ -116,3 +116,25 @@ def test_measure_refuses_a_window_ending_in_the_future(fde: Path) -> None:
     add_kpi(fde)
     args = ("--value", "40", "--source", "s", "--window-end", "2026-10-13")
     assert "future" in fails("kpi", "measure", "resolution-time", *args).output
+
+
+def test_a_new_baseline_with_the_same_recipe_needs_a_reason(fde: Path) -> None:
+    add_kpi(fde)
+    args = ("kpi", "measure", "resolution-time", "--value", "45", "--source", "s")
+    ok(*args, "--baseline", "late")
+    assert decisions(fde) == []
+    assert "--reason is required" in fails(*args, "--baseline", "late").output
+    ok(*args, "--baseline", "historical", "--reason", "Older data found")
+    [decision] = decisions(fde)
+    assert decision["type"] == "baseline-change"
+    assert decision["reason"] == "Older data found"
+
+
+def test_a_new_baseline_after_a_recipe_change_is_logged(fde: Path) -> None:
+    add_kpi(fde)
+    args = ("kpi", "measure", "resolution-time", "--value", "45", "--source", "s")
+    ok(*args, "--baseline", "late")
+    write_recipe(fde, "measures/resolution-time.sql", "select 2\n")
+    ok(*args, "--baseline", "late")
+    [decision] = decisions(fde)
+    assert decision["reason"] == "The recipe changed after the previous baseline."

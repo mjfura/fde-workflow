@@ -35,6 +35,9 @@ check "measure shows the recipe" 0 "Take the measurement" kpi-no-baseline kpi me
 check "measure records a value" 0 "Recorded." kpi-no-baseline kpi measure resolution-time --value 45 --source s
 check "validated needs evidence" 1 "[P2]" path-measuring path move auto-triage validated --reason r
 check "validate lists warnings" 0 "[K3]" kpi-no-baseline validate
+check "brownfield init creates the marker" 0 "Created .fde/" brownfield init --preset superpowers
+check "brownfield after init has a direction" 0 "North Star: not defined" brownfield status
+check "brownfield detect after init" 0 '"fde_initialised": true' brownfield detect
 if grep -qF "fde-workflow doctor" "$EVAL_STUB_LOG"; then
   echo "ok: calls are logged"
 else

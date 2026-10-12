@@ -113,3 +113,11 @@ def test_detect_command_reports_links_once_initialised(repo: Path) -> None:
     ok("path", "link", "--pre-framework", "docs/superpowers/specs/a.md")
     report = json.loads(ok("detect").stdout)
     assert [a["linked_to"] for a in report["artifacts"]] == ["pre-framework", None]
+
+
+def test_confirming_twice_records_one_decision(fde: Path) -> None:
+    add_kpi(fde)
+    ok(*OPEN, "--inferred")
+    ok("path", "confirm", "auto-triage")
+    assert "already confirmed" in ok("path", "confirm", "auto-triage").output
+    assert len(decisions(fde)) == 1

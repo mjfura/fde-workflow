@@ -32,9 +32,10 @@ def check_direction() -> CheckResult:
         return CheckResult(ok=True, message="No .fde/ here yet: the adopt skill sets one up")
     try:
         store.load()
+        store.measurements()
+        store.decisions()
     except FdeError as error:
-        first_line = str(error).splitlines()[0]
-        return CheckResult(ok=False, message=f".fde/ cannot be read: {first_line}")
+        return CheckResult(ok=False, message=f".fde/ cannot be read: {error}")
     return CheckResult(ok=True, message=f".fde/ uses schema {SCHEMA_VERSION}: {store.dir}")
 
 

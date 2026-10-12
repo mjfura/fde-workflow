@@ -245,6 +245,9 @@ def confirm(
         store = open_store(root)
         direction = store.load()
         path = find_path(direction, path_id)
+        if path.confirmed:
+            typer.echo(f"Path {path_id} already confirmed.")
+            return
         path.confirmed = True
         store.save(direction)
         record(

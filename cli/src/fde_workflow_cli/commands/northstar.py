@@ -78,13 +78,30 @@ def set_(
 
 
 @app.command()
-def confirm(root: RootOption = None) -> None:
-    """Mark an inferred North Star as confirmed."""
+def confirm(
+    reason: Annotated[
+        str, typer.Option(help="Why it is confirmed.")
+    ] = "Confirmed a North Star inferred from existing work.",
+    approved_by: Annotated[str, typer.Option("--approved-by", help="Who agreed it.")] = "",
+    root: RootOption = None,
+) -> None:
+    """Mark an inferred North Star as confirmed; records a decision."""
     with user_errors():
         store = open_store(root)
         direction = store.load()
-        if direction.north_star is None:
+        north_star = direction.north_star
+        if north_star is None:
             raise FdeError("There is no North Star to confirm.")
-        direction.north_star.confirmed = True
+        if north_star.confirmed:
+            typer.echo("North Star already confirmed.")
+            return
+        north_star.confirmed = True
         store.save(direction)
+        record(
+            store,
+            DecisionType.NORTH_STAR_CHANGE,
+            f"Confirm North Star: {north_star.statement}",
+            reason,
+            approved_by,
+        )
     typer.echo("North Star confirmed.")

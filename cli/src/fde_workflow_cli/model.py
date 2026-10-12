@@ -83,6 +83,7 @@ class DecisionType(StrEnum):
     PATH_DISCARD = "path-discard"
     STAGE_GATE = "stage-gate"
     STAGE_SET = "stage-set"
+    BASELINE_CHANGE = "baseline-change"
     SCOPE_CHANGE = "scope-change"
     OTHER = "other"
 

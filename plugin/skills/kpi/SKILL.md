@@ -54,7 +54,8 @@ A baseline is the first measurement, recorded with `--baseline historical|late`:
 - **late**: the data from before is gone, so it is measured now. Tell the user that reports will
   say so, because it misses any impact achieved before it.
 Explain the choice to the user and let them decide. When the recipe changed after the baseline
-(`[K4]`), measure the baseline again with the new recipe.
+(`[K4]`), measure the baseline again with the new recipe. Replacing a baseline measured with the
+same recipe moves the comparison point, so it needs `--reason "..."` and is logged as a decision.
 
 ## Rules
 
