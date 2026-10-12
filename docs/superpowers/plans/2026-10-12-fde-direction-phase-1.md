@@ -90,7 +90,7 @@ plugin/evals/    stub (extended) and four new cases
 ### Task 1: Dependencies and data model
 
 **Files:**
-- Modify: `cli/pyproject.toml`, `cli/poetry.lock` (through Poetry)
+- Modify: `cli/pyproject.toml` (through Poetry; the repository does not track `poetry.lock`)
 - Create: `cli/src/fde_workflow_cli/errors.py`, `cli/src/fde_workflow_cli/clock.py`,
   `cli/src/fde_workflow_cli/model.py`
 - Create: `cli/tests/helpers.py`, `cli/tests/conftest.py`
@@ -114,8 +114,8 @@ cd cli
 poetry add "pydantic (>=2.14,<3)" "pyyaml (>=6.0.3,<7)"
 poetry add --group dev types-pyyaml
 ```
-Expected: `pyproject.toml` lists both under `[project].dependencies`, `types-pyyaml` under the dev
-group, and `poetry.lock` is updated.
+Expected: `pyproject.toml` lists both under `[project].dependencies` and `types-pyyaml` under the
+dev group. Poetry also writes `cli/poetry.lock`; leave it untracked, as today.
 
 - [ ] **Step 2: Write the shared test helpers** — `cli/tests/helpers.py`
 
@@ -589,7 +589,7 @@ ones still pass.)
 - [ ] **Step 10: Commit**
 
 ```bash
-git add cli/pyproject.toml cli/poetry.lock cli/src/fde_workflow_cli/{errors,clock,model}.py cli/tests/{helpers,conftest,test_model}.py
+git add cli/pyproject.toml cli/src/fde_workflow_cli/{errors,clock,model}.py cli/tests/{helpers,conftest,test_model}.py
 git commit -m "feat(cli): add the direction data model"
 ```
 
