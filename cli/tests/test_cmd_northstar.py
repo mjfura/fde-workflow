@@ -36,9 +36,19 @@ def test_an_inferred_north_star_changes_freely_until_confirmed(fde: Path) -> Non
     ok("northstar", "set", "--statement", "Better draft")
     ok("northstar", "confirm")
     assert "[C1]" not in ok("validate").output
-    assert decisions(fde) == []
+    assert [d["summary"] for d in decisions(fde)] == ["Confirm North Star: Better draft"]
 
 
 def test_primary_kpi_must_exist(fde: Path) -> None:
     result = fails("northstar", "set", "--statement", "x", "--primary-kpi", "nope")
     assert "[N1]" in result.output
+
+
+def test_confirming_records_one_decision(fde: Path) -> None:
+    ok("northstar", "set", "--statement", "Draft", "--inferred")
+    ok("northstar", "confirm", "--approved-by", "Jane")
+    assert "already confirmed" in ok("northstar", "confirm").output
+    [decision] = decisions(fde)
+    assert decision["type"] == "north-star-change"
+    assert decision["summary"] == "Confirm North Star: Draft"
+    assert decision["approved_by"] == "Jane"

@@ -65,14 +65,25 @@ def set_(
 
 
 @app.command()
-def confirm(root: RootOption = None) -> None:
-    """Mark an inferred stage as confirmed."""
+def confirm(
+    reason: Annotated[
+        str, typer.Option(help="Why it is confirmed.")
+    ] = "Confirmed a stage inferred from evidence.",
+    approved_by: Annotated[str, typer.Option("--approved-by", help="Who agreed it.")] = "",
+    root: RootOption = None,
+) -> None:
+    """Mark an inferred stage as confirmed; records a decision."""
     with user_errors():
         store = open_store(root)
         direction = store.load()
-        direction.stage.confirmed = True
+        stage = direction.stage
+        if stage.confirmed:
+            typer.echo(f"Stage {stage.current} already confirmed.")
+            return
+        stage.confirmed = True
         store.save(direction)
-    typer.echo(f"Stage {direction.stage.current} confirmed.")
+        record(store, DecisionType.STAGE_SET, f"Confirm stage {stage.current}", reason, approved_by)
+    typer.echo(f"Stage {stage.current} confirmed.")
 
 
 @app.command()

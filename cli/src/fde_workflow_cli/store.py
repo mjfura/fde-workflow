@@ -1,5 +1,6 @@
 """Read and write `.fde/`. direction.yaml is validated, rules included, before every write."""
 
+import hashlib
 import os
 import tempfile
 from pathlib import Path
@@ -53,6 +54,7 @@ class Store:
         self.root = root
         self.dir = root / FDE_DIR
         self.direction_file = self.dir / DIRECTION_FILE
+        self._loaded_digest: str | None = None
 
     def exists(self) -> bool:
         return self.direction_file.is_file()
@@ -71,17 +73,29 @@ class Store:
             raise FdeError(
                 f"No .fde/ in {self.root}: run `fde-workflow init` (or the adopt skill) first."
             )
+        text = read_text(self.direction_file)
+        self._loaded_digest = _digest(text)
         try:
-            data = yaml.safe_load(read_text(self.direction_file))
+            data = yaml.safe_load(text)
         except yaml.YAMLError as error:
             raise FdeError(f"{self.direction_file} is not valid YAML: {error}") from error
         if not isinstance(data, dict):
             raise FdeError(f"{self.direction_file} must contain a YAML mapping.")
         version = data.get("schema_version")
+        if version is None:
+            raise FdeError(
+                f"{self.direction_file} has no schema_version: it is not an fde-workflow "
+                "direction file, or it was damaged."
+            )
+        if isinstance(version, int) and version > SCHEMA_VERSION:
+            raise FdeError(
+                f"{self.direction_file} has schema_version {version}; this fde-workflow "
+                f"supports {SCHEMA_VERSION}. Upgrade it: uv tool upgrade fde-workflow-cli."
+            )
         if version != SCHEMA_VERSION:
             raise FdeError(
                 f"{self.direction_file} has schema_version {version!r}; this fde-workflow "
-                f"supports {SCHEMA_VERSION}. Upgrade it: uv tool upgrade fde-workflow-cli."
+                f"reads only schema_version {SCHEMA_VERSION}."
             )
         try:
             return Direction.model_validate(data)
@@ -103,12 +117,27 @@ class Store:
         if errors:
             listed = "\n".join(f"  [{issue.rule}] {issue.message}" for issue in errors)
             raise FdeError(f"Not saved: the change breaks the framework's rules:\n{listed}")
+        if (
+            self._loaded_digest is not None
+            and self.direction_file.is_file()
+            and _digest(read_text(self.direction_file)) != self._loaded_digest
+        ):
+            raise FdeError(
+                f"{self.direction_file} changed since it was read (another fde-workflow "
+                "command?): run the command again."
+            )
         text = yaml.safe_dump(data, sort_keys=False, allow_unicode=True)
         with tempfile.NamedTemporaryFile(
             "w", encoding="utf-8", dir=self.dir, suffix=".tmp", delete=False
         ) as handle:
             handle.write(text)
-        os.replace(handle.name, self.direction_file)
+        try:
+            os.chmod(handle.name, 0o666 & ~_umask())
+            os.replace(handle.name, self.direction_file)
+        except OSError as error:
+            Path(handle.name).unlink(missing_ok=True)
+            raise FdeError(f"Cannot write {self.direction_file}: {error.strerror}.") from error
+        self._loaded_digest = _digest(text)
 
     def measurements(self) -> list[Measurement]:
         return _read_jsonl(self.dir / MEASUREMENTS_FILE, Measurement)
@@ -121,6 +150,16 @@ class Store:
 
     def append_decision(self, decision: Decision) -> None:
         _append_jsonl(self.dir / DECISIONS_FILE, decision)
+
+
+def _digest(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _umask() -> int:
+    mask = os.umask(0)
+    os.umask(mask)
+    return mask
 
 
 def _read_jsonl[M: BaseModel](path: Path, model: type[M]) -> list[M]:

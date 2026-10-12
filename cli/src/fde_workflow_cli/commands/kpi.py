@@ -148,6 +148,10 @@ def measure(
     run: Annotated[
         bool, typer.Option("--run", help="Run a script recipe and record its output.")
     ] = False,
+    reason: Annotated[
+        str | None,
+        typer.Option(help="Why a new baseline replaces one measured with the same recipe."),
+    ] = None,
     root: RootOption = None,
 ) -> None:
     """Record a measurement; without --value or --run, show how to take it."""
@@ -163,6 +167,15 @@ def measure(
         fingerprint = recipes.fingerprint(store.dir, kpi.recipe)
         if fingerprint is None:
             raise FdeError(f"Recipe .fde/{kpi.recipe.file} does not exist: write it first.")
+        previous = rules.latest_baseline(store.measurements(), kpi.id)
+        rebaseline_reason: str | None = None
+        if baseline is not None and previous is not None:
+            if previous.recipe_sha256 == fingerprint:
+                rebaseline_reason = require(
+                    reason, "--reason", "to replace a baseline measured with the same recipe"
+                )
+            else:
+                rebaseline_reason = reason or "The recipe changed after the previous baseline."
         if kpi.recipe.type is RecipeType.SCRIPT:
             if value is not None:
                 raise FdeError("Script recipes are run, not typed: use --run.")
@@ -185,7 +198,6 @@ def measure(
                 )
                 return
             source = require(source, "--source", "to record a measurement")
-        previous = rules.latest_baseline(store.measurements(), kpi.id)
         store.append_measurement(
             Measurement(
                 kpi=kpi.id,
@@ -199,6 +211,14 @@ def measure(
                 recipe_sha256=fingerprint,
             )
         )
+        if rebaseline_reason is not None:
+            record(
+                store,
+                DecisionType.BASELINE_CHANGE,
+                f"New {baseline} baseline of {kpi.id}: {number(value)}",
+                rebaseline_reason,
+                refs=[kpi.id],
+            )
     unit = f" {kpi.unit}" if kpi.unit else ""
     label = f"{baseline} baseline" if baseline else "measurement"
     typer.echo(f"Recorded {label} {kpi.id} = {number(value)}{unit} (window {start} to {end}).")

@@ -110,3 +110,13 @@ def test_decision_add(fde: Path) -> None:
     [decision] = decisions(fde)
     assert decision["type"] == "scope-change"
     assert decision["refs"] == ["auto-triage"]
+
+
+def test_confirming_the_stage_records_one_decision(fde: Path) -> None:
+    ok("stage", "set", "mvp", "--reason", "Deployed", "--inferred")
+    ok("stage", "confirm", "--approved-by", "Jane")
+    assert "already confirmed" in ok("stage", "confirm").output
+    assert [d["summary"] for d in decisions(fde)] == [
+        "Stage set to mvp (inferred)",
+        "Confirm stage mvp",
+    ]

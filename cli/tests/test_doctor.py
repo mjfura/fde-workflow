@@ -26,3 +26,18 @@ def test_direction_check_with_an_unsupported_schema(fde: Path) -> None:
     result = check_direction()
     assert not result.ok
     assert "schema_version 9" in result.message
+
+
+def test_direction_check_shows_the_whole_error(fde: Path) -> None:
+    path = fde / ".fde" / "direction.yaml"
+    path.write_text(path.read_text().replace("name: acme-support", "nmae: acme-support"))
+    result = check_direction()
+    assert not result.ok
+    assert "nmae" in result.message
+
+
+def test_direction_check_reads_the_logs(fde: Path) -> None:
+    (fde / ".fde" / "measurements.jsonl").write_text("{}\n")
+    result = check_direction()
+    assert not result.ok
+    assert "measurements.jsonl:1" in result.message

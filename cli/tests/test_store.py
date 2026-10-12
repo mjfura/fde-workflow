@@ -1,4 +1,5 @@
 import datetime as dt
+import os
 from pathlib import Path
 
 import pytest
@@ -33,13 +34,6 @@ def test_create_refuses_an_existing_fde(tmp_path: Path) -> None:
 def test_load_without_fde_says_how_to_start(tmp_path: Path) -> None:
     with pytest.raises(FdeError, match="fde-workflow init"):
         Store(tmp_path).load()
-
-
-def test_load_rejects_an_unsupported_schema_version(tmp_path: Path) -> None:
-    store = created(tmp_path)
-    store.direction_file.write_text("schema_version: 2\n")
-    with pytest.raises(FdeError, match="Upgrade it"):
-        store.load()
 
 
 def test_load_reports_where_the_file_is_invalid(tmp_path: Path) -> None:
@@ -110,4 +104,51 @@ def test_files_that_are_not_utf8_are_reported(tmp_path: Path) -> None:
         store.decisions()
     store.direction_file.write_bytes(b"schema_version: 1\nproject: {name: Direcci\xf3n}\n")
     with pytest.raises(FdeError, match="UTF-8"):
+        store.load()
+
+
+def test_direction_file_has_the_same_permissions_as_the_logs(tmp_path: Path) -> None:
+    created(tmp_path)
+    fde = tmp_path / ".fde"
+    direction_mode = (fde / "direction.yaml").stat().st_mode & 0o777
+    assert direction_mode == (fde / "measurements.jsonl").stat().st_mode & 0o777
+
+
+def test_a_failed_write_leaves_no_temporary_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store = created(tmp_path)
+    direction = store.load()
+
+    def broken_replace(source: str, target: object) -> None:
+        raise OSError(28, "No space left on device")
+
+    monkeypatch.setattr(os, "replace", broken_replace)
+    with pytest.raises(FdeError, match="No space left"):
+        store.save(direction)
+    assert list((tmp_path / ".fde").glob("*.tmp")) == []
+
+
+def test_save_refuses_when_another_command_changed_the_file(tmp_path: Path) -> None:
+    created(tmp_path)
+    first, second = Store(tmp_path), Store(tmp_path)
+    stale, fresh = first.load(), second.load()
+    fresh.project.sponsor = "Jane"
+    second.save(fresh)
+    with pytest.raises(FdeError, match="changed since"):
+        first.save(stale)
+
+
+@pytest.mark.parametrize(
+    ("text", "message"),
+    [
+        ("project: {name: x}\n", "has no schema_version"),
+        ("schema_version: 2\n", "Upgrade"),
+        ("schema_version: 0\n", "only schema_version 1"),
+    ],
+)
+def test_schema_version_messages(tmp_path: Path, text: str, message: str) -> None:
+    store = created(tmp_path)
+    store.direction_file.write_text(text)
+    with pytest.raises(FdeError, match=message):
         store.load()
