@@ -86,6 +86,9 @@ def render(
         expects = ", ".join(f"{kpi_id} → {number(v)}" for kpi_id, v in path.expects.items())
         lines.append(f"  {path.id} [{path.status}]{inferred}: {clean(path.hypothesis)} ({expects})")
 
+    if brief:
+        # Due KPIs stay visible: they are the reminder that replaces scheduled measurements.
+        issues = sorted(issues, key=lambda issue: (issue.level != "error", issue.rule != "K6"))
     shown = issues[:BRIEF_ISSUES] if brief else issues
     if shown:
         lines.append("Issues:")

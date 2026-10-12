@@ -1,7 +1,9 @@
 import json
 from pathlib import Path
 
-from tests.helpers import make_files, ok
+import pytest
+
+from tests.helpers import add_kpi, make_files, ok
 
 
 def test_session_start_is_silent_without_fde(tmp_path: Path) -> None:
@@ -66,3 +68,36 @@ def test_post_tool_use_is_silent_without_fde_or_with_bad_input(repo: Path) -> No
     ok("init")
     for payload in ("not json", "{}", json.dumps({"cwd": str(repo), "tool_name": "Write"})):
         assert ok("hook", "post-tool-use", stdin=payload).stdout == ""
+
+
+def test_post_tool_use_uses_the_fde_of_the_written_file(repo: Path) -> None:
+    service = repo / "service"
+    make_files(service, "docs/superpowers/specs/new.md")
+    ok("init", "--root", str(service))
+    payload = json.dumps(
+        {
+            "cwd": str(repo),
+            "tool_name": "Write",
+            "tool_input": {"file_path": str(service / "docs/superpowers/specs/new.md")},
+        }
+    )
+    assert "docs/superpowers/specs/new.md" in ok("hook", "post-tool-use", stdin=payload).stdout
+
+
+def test_post_tool_use_ignores_path_linked_and_outside_files(
+    repo: Path, tmp_path_factory: pytest.TempPathFactory
+) -> None:
+    make_files(repo, "docs/superpowers/specs/a.md")
+    ok("init")
+    add_kpi(repo)
+    ok("path", "add", "p", "--hypothesis", "h", "--expects", "resolution-time=1", "--reason", "r")
+    ok("path", "link", "p", "docs/superpowers/specs/a.md")
+    assert (
+        ok("hook", "post-tool-use", stdin=written(repo, "docs/superpowers/specs/a.md")).stdout == ""
+    )
+    outside = tmp_path_factory.mktemp("elsewhere") / "x.md"
+    outside.write_text("x")
+    payload = json.dumps(
+        {"cwd": str(repo), "tool_name": "Write", "tool_input": {"file_path": str(outside)}}
+    )
+    assert ok("hook", "post-tool-use", stdin=payload).stdout == ""

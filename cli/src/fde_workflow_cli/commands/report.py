@@ -14,11 +14,13 @@ from fde_workflow_cli.report import ReportKind
 STATUS_FILE = re.compile(r"^(\d{4}-\d{2}-\d{2})-status(?:-\d+)?\.md$")
 
 
-def previous_status_date(reports: Path) -> dt.date | None:
+def previous_status_date(reports: Path, today: dt.date) -> dt.date | None:
+    """Date of the latest status report before today: regenerating one keeps its period."""
     dates = [
-        dt.date.fromisoformat(match.group(1))
+        date
         for path in reports.glob("*.md")
         if (match := STATUS_FILE.match(path.name))
+        and (date := dt.date.fromisoformat(match.group(1))) < today
     ]
     return max(dates, default=None)
 
@@ -47,7 +49,7 @@ def report_command(
         reports.mkdir(exist_ok=True)
         start = parse_date(since, "--since") if since else None
         if start is None and kind is ReportKind.STATUS:
-            start = previous_status_date(reports)
+            start = previous_status_date(reports, clock.today())
         text = report.render(
             kind,
             direction,
@@ -56,6 +58,7 @@ def report_command(
             rules.check(direction, measurements, store.dir),
             detect.drift(store.root, direction),
             start,
+            rules.stale_baselines(direction, measurements, store.dir),
         )
         path = free_path(reports, f"{clock.today()}-{kind}")
         path.write_text(text, encoding="utf-8")

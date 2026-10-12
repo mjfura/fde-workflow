@@ -54,12 +54,14 @@ def post_tool_use_context(payload: str) -> str | None:
     if data.get("tool_name") != "Write" or not isinstance(tool_input, dict):
         return None
     file_path = tool_input.get("file_path")
-    store = store_for(data)
-    if not isinstance(file_path, str) or not store.exists():
+    if not isinstance(file_path, str):
         return None
     written = Path(file_path)
     if not written.is_absolute():
-        written = store.root / written
+        written = store_for(data).root / written
+    store = Store(locate(written.parent))
+    if not store.exists():
+        return None
     if not written.resolve().is_relative_to(store.root.resolve()):
         return None
     relative = written.resolve().relative_to(store.root.resolve()).as_posix()
@@ -70,7 +72,7 @@ def post_tool_use_context(payload: str) -> str | None:
     if relative not in detect.drift(store.root, direction):
         return None
     return (
-        f"fde-workflow: {relative} is a new execution artifact that no path links. Ask the user "
+        f"fde-workflow: {relative} is an execution artifact that no path links. Ask the user "
         "which path it serves and link it (`fde-workflow path link <path-id> "
         f"{relative}`), or say plainly that it is outside the direction (drift). The path skill "
         "covers this."

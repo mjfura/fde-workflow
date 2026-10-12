@@ -54,3 +54,12 @@ def test_portfolio_forget(repo: Path) -> None:
     assert "No projects registered" not in ok("portfolio").output
     ok("portfolio", "forget", str(repo))
     assert "No projects registered" in ok("portfolio").output
+
+
+def test_a_corrupt_registry_is_never_overwritten(repo: Path) -> None:
+    path = registry.registry_file()
+    path.parent.mkdir(parents=True)
+    path.write_text('{"projects": ["/a", "/b"')
+    ok("init")
+    assert path.read_text() == '{"projects": ["/a", "/b"'
+    assert "cannot be read" in ok("portfolio").output

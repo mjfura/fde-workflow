@@ -184,4 +184,6 @@ def test_closed_projects_have_no_due_kpis(tmp_path: Path) -> None:
 
 
 def test_kpi_without_baseline_is_not_due(tmp_path: Path) -> None:
-    assert "warning:K6" not in check(tmp_path, sample_direction(), [])
+    found = check(tmp_path, sample_direction(), [measured("2026-01-01")])
+    assert "warning:K3" in found
+    assert "warning:K6" not in found

@@ -52,6 +52,22 @@ def latest_baseline(measurements: list[Measurement], kpi_id: str) -> Measurement
     return baselines[-1] if baselines else None
 
 
+def stale_baselines(
+    direction: Direction, measurements: list[Measurement], fde_dir: Path
+) -> set[str]:
+    """K4: KPIs whose recipe changed after their latest baseline."""
+    stale = set()
+    for kpi in direction.kpis:
+        baseline = latest_baseline(measurements, kpi.id)
+        try:
+            current = recipes.fingerprint(fde_dir, kpi.recipe)
+        except FdeError:
+            continue
+        if baseline is not None and current is not None and baseline.recipe_sha256 != current:
+            stale.add(kpi.id)
+    return stale
+
+
 def due_kpis(
     direction: Direction, measurements: list[Measurement]
 ) -> list[tuple[Kpi, Measurement]]:

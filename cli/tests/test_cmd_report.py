@@ -33,3 +33,15 @@ def test_status_report_lists_decisions_since_the_previous_one(
     assert "After" in text
     closing = Path(ok("report", "close").output.strip()).read_text()
     assert "Before" in closing
+
+
+def test_regenerating_a_status_report_keeps_the_period(
+    fde: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ok("report", "status")
+    monkeypatch.setattr(clock, "today", lambda: dt.date(2026, 10, 20))
+    ok("decision", "add", "--summary", "During the week", "--reason", "r")
+    ok("report", "status")
+    again = Path(ok("report", "status").output.strip()).read_text()
+    assert "## Decisions since 2026-10-12" in again
+    assert "During the week" in again
