@@ -53,6 +53,7 @@ jobs:
         if: steps.changes.outputs.run == 'true'
         working-directory: cli
         run: |
+          poetry check --lock
           poetry install --no-interaction
           poetry run ruff check .
           poetry run ruff format --check .

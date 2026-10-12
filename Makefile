@@ -19,5 +19,5 @@ plugin-check: ## Validate the plugin and marketplace, check versions and PyPI na
 	sh plugin/hooks/test_fde_hook.sh
 
 cli-check: ## Lint, type-check and test the CLI
-	cd cli && poetry run ruff check . && poetry run ruff format --check . && poetry run mypy && poetry run pytest
+	cd cli && poetry check --lock && poetry run ruff check . && poetry run ruff format --check . && poetry run mypy && poetry run pytest
 

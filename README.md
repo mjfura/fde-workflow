@@ -37,6 +37,11 @@ make install                          # development environment of every package
 make check                            # what CI checks on a pull request
 ```
 
+`cli/poetry.lock` pins the exact versions used in development and CI. Change dependencies with
+`poetry add` / `poetry update` inside `cli/` and commit the updated lock; `make cli-check` fails when
+the lock does not match `pyproject.toml`. Users installing from PyPI get the ranges in
+`pyproject.toml`, not the lock.
+
 To try the plugin from this checkout, run `make plugin-check` first: it also checks the PyPI
 names of the packages the plugin installs.
 
