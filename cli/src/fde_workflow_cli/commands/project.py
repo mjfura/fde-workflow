@@ -8,8 +8,11 @@ import typer
 
 from fde_workflow_cli import clock, detect, rules, summary
 from fde_workflow_cli.commands.common import RootOption, open_store, user_errors
+from fde_workflow_cli.errors import FdeError
 from fde_workflow_cli.model import Artifacts, Direction, Project, StageState
-from fde_workflow_cli.store import Store
+from fde_workflow_cli.store import Store, locate
+
+app = typer.Typer(help="Name the project, its customer and its sponsor.", no_args_is_help=True)
 
 
 def init(
@@ -30,6 +33,11 @@ def init(
     """Create .fde/ with an empty direction in stage discovery."""
     with user_errors():
         directory = (root or Path.cwd()).resolve()
+        if root is None and locate(directory) != directory:
+            raise FdeError(
+                f"{locate(directory)} already has .fde/: run the commands from there, "
+                "or pass --root to create a separate direction on purpose."
+            )
         store = Store(directory)
         globs = glob or detect.globs_for(preset, directory)
         store.create(
@@ -88,3 +96,28 @@ def context(
         measurements = store.measurements()
         issues = rules.check(direction, measurements, store.dir)
     typer.echo(summary.context(direction, measurements, issues, brief=brief))
+
+
+@app.command("set")
+def set_project(
+    name: Annotated[str | None, typer.Option(help="Project name.")] = None,
+    customer: Annotated[str | None, typer.Option(help="The customer.")] = None,
+    sponsor: Annotated[
+        str | None, typer.Option(help="Who approves direction changes and gate decisions.")
+    ] = None,
+    root: RootOption = None,
+) -> None:
+    """Set the project's name, customer or sponsor."""
+    with user_errors():
+        store = open_store(root)
+        direction = store.load()
+        changes = {
+            k: v
+            for k, v in {"name": name, "customer": customer, "sponsor": sponsor}.items()
+            if v is not None
+        }
+        if not changes:
+            raise FdeError("Nothing to change: pass --name, --customer or --sponsor.")
+        direction.project = direction.project.model_copy(update=changes)
+        store.save(direction)
+    typer.echo("Project updated.")

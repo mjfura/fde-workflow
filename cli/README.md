@@ -13,6 +13,7 @@ fde-workflow doctor                 # checks that everything is ready
 |---|---|
 | `init`, `detect` | Set up `.fde/`; inspect a repository's methodology and artifacts |
 | `status`, `context`, `validate` | Summaries for people and for Claude; rule checks |
+| `project set` | The project's name, customer and sponsor |
 | `northstar set\|confirm` | The North Star |
 | `kpi add\|update\|measure` | KPIs, their recipes and measurements |
 | `path add\|update\|move\|link\|confirm` | Paths and their links to execution work |

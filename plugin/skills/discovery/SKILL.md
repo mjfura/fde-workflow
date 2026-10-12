@@ -41,12 +41,14 @@ Before recording it, test the statement with the user:
 1. Propose KPIs from the evidence answers: exactly one primary, the secondary ones that add nuance,
    and guardrails (cost, errors, satisfaction) that must not get worse. Define each with the `kpi`
    skill; it writes the recipe and measures the baseline.
-2. Record the North Star once the user agrees on the wording:
+2. Record the customer and the sponsor:
+   `fde-workflow project set --customer "..." --sponsor "<name, role>"`.
+3. Record the North Star once the user agrees on the wording:
    `fde-workflow northstar set --statement "..." --beneficiary "..." --problem "..."
    --non-goal "..." --primary-kpi <id>`. Draft from `adopt`: update it the same way, then
    `fde-workflow northstar confirm` when the user confirms it.
-3. Agree the gate criteria of the current stage (see the `fde-workflow` skill, *Stage*).
-4. Finish with `fde-workflow status` and a short summary.
+4. Agree the gate criteria of the current stage (see the `fde-workflow` skill, *Stage*).
+5. Finish with `fde-workflow status` and a short summary.
 
 ## Rules
 

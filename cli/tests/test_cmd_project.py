@@ -73,3 +73,19 @@ def test_status_and_context(fde: Path) -> None:
     context = ok("context", "--brief").output
     assert context.startswith("FDE direction of this repository")
     assert "Gate criteria: 0" in context
+
+
+def test_init_refuses_inside_an_initialised_repository(
+    fde: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (fde / "sub").mkdir()
+    monkeypatch.chdir(fde / "sub")
+    assert "already has .fde/" in fails("init").output
+    assert not (fde / "sub" / ".fde").exists()
+
+
+def test_project_set_records_customer_and_sponsor(fde: Path) -> None:
+    ok("project", "set", "--customer", "ACME", "--sponsor", "Jane Doe, VP Support")
+    status = ok("status").output
+    assert "Project: acme-support · customer ACME · sponsor Jane Doe, VP Support" in status
+    assert "Nothing to change" in fails("project", "set").output

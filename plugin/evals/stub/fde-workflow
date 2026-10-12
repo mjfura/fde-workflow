@@ -109,8 +109,8 @@ JSON
     fi
     echo "Saved."
     ;;
-  init|northstar|stage|decision) echo "Saved." ;;
+  init|project|northstar|stage|decision) echo "Saved." ;;
   hook) ;;
-  ""|--help|-h) echo "Usage: fde-workflow [OPTIONS] COMMAND [ARGS]...  Commands: doctor init detect validate status context northstar kpi path stage decision hook" ;;
+  ""|--help|-h) echo "Usage: fde-workflow [OPTIONS] COMMAND [ARGS]...  Commands: doctor init detect validate status context project northstar kpi path stage decision hook" ;;
   *) echo "Error: No such command '$1'." >&2; exit 2 ;;
 esac
