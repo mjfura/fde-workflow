@@ -1,7 +1,7 @@
 {
   "name": "fde-workflow",
   "description": "Direction framework for FDE customer projects: North Star, KPIs with baselines, paths, stages and decisions, on top of any execution methodology.",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "author": {
     "name": "Marco Fura Mendoza",
     "url": "https://github.com/mjfura"

@@ -1,6 +1,6 @@
 [project]
 name = "fde-workflow-cli"
-version = "0.1.1"
+version = "0.2.0"
 description = "Direction framework for FDE customer projects: North Star, KPIs with baselines, paths, stages and decisions, on top of any execution methodology."
 authors = [{ name = "Marco Fura Mendoza" }]
 readme = "README.md"
