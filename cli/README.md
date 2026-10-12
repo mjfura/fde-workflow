@@ -24,5 +24,8 @@ fde-workflow doctor                 # checks that everything is ready
 | `decision add` | Other direction decisions |
 | `hook session-start\|post-tool-use` | Entry points of the plugin's hooks |
 
-Run `fde-workflow <command> --help` for the options. Requires Python 3.13 or newer. Source and
+Run `fde-workflow <command> --help` for the options. `init`, `status`, `validate`, `context` and
+the SessionStart hook add the repository to the portfolio registry,
+`$XDG_CONFIG_HOME/fde-workflow/projects.json` (default `~/.config/fde-workflow/projects.json`),
+which holds repository paths only. Requires Python 3.13 or newer. Source and
 plugin: https://github.com/mjfura/fde-workflow

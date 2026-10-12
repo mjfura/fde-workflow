@@ -51,9 +51,9 @@ Read `../fde-workflow/references/framework.md` (relative to this skill's directo
 - `fde-workflow kpi due` lists the KPIs whose last measurement is a full window old (rule K6);
   measure them so status reports and gates rely on current numbers.
 - For `query` recipes, or when finding the data takes exploration, delegate the measurement to
-  the `kpi-measurer` agent with the KPI id and the window end, and say whether the user agreed to
-  run a `script` recipe. It returns the value and its evidence; you still ask about external
-  factors and record the measurement.
+  the `kpi-measurer` agent with the KPI id and the window end. It returns the value and its
+  evidence; you still ask about external factors and record the measurement. `script` recipes
+  you run yourself, with the user's consent, as described below.
 
 ## Baselines
 

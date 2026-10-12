@@ -25,13 +25,15 @@ and the sponsor where it applies, confirm them.
 
 `.fde/direction.yaml`, `.fde/measurements.jsonl` and `.fde/decisions.jsonl` are written **only**
 by the `fde-workflow` CLI, which validates every change. Skills write free-form files only:
-recipes in `.fde/measures/` and notes in `.fde/discovery/`.
+recipes in `.fde/measures/`, notes in `.fde/discovery/` and the summary of reports in
+`.fde/reports/`.
 
 ## Commands at a glance
 
-`fde-workflow status`, `validate`, `context`, `drift`, `kpi due`, `report status|close` and
-`portfolio` read; `init`, `project set`, `northstar`, `kpi add|update|measure`, `path`, `stage` and
-`decision add` write. `fde-workflow <command> --help` shows the options.
+`fde-workflow status`, `validate`, `context`, `drift`, `kpi due` and `portfolio` read (the first
+three also add the repository to the portfolio registry); `report status|close` writes a report
+file; `init`, `project set`, `northstar`, `kpi add|update|measure`, `path`, `stage` and
+`decision add` change the direction. `fde-workflow <command> --help` shows the options.
 
 ## Limitation
 

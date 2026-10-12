@@ -3,6 +3,7 @@ name: stage
 description: 'Manage the stage of an FDE customer project (discovery, poc, mvp, early-access, production, closed) and its gates: agree gate criteria when entering a stage, evaluate them with evidence before leaving, and record go, recycle, hold or kill with the sponsor. Use it when the user says "we are moving to MVP", "are we ready for production?", "let us pause the project", "should we stop?", asks about gate criteria, or when the current stage has none.'
 allowed-tools:
   - Bash(fde-workflow status)
+  - Bash(fde-workflow kpi due)
   - Bash(fde-workflow validate)
   - Bash(fde-workflow context)
 ---
@@ -41,7 +42,8 @@ limited real use?), `production` (does it deliver the value at scale, operably?)
 4. Never decide on the user's behalf. Ask who on the customer side approved it, then:
    `fde-workflow stage decide go|recycle|hold|kill --reason "<the evidence>" --approved-by "<sponsor>"`.
 5. After **go**, agree the next stage's criteria right away. A go from `production` closes the
-   project as completed; offer the closing report (the `report` skill).
+   project as completed and a kill closes it as discontinued; either way, offer the closing
+   report (the `report` skill).
 
 ## Inferred stage
 

@@ -6,6 +6,7 @@
 #   kpi-no-baseline               North Star and a primary KPI with a query recipe, no baseline
 #   path-measuring                path auto-triage built and in measuring, no measurement since
 #   mvp-gate                      mvp with its gate criteria met by the latest measurement
+#   reporting                     mvp with a recent measurement of the primary KPI, for reports
 #   brownfield                    no .fde/ yet; superpowers specs and plans exist. After `init`
 #                                 (marker file .fde-stub-init) it behaves as an initialised repo.
 scenario="${EVAL_SCENARIO:-ready}"
@@ -53,6 +54,14 @@ status() {
         "  resolution-time (primary): baseline 45 min (historical) → latest 33 min on 2026-10-10 → target ≤ 30 min" \
         "Paths:" \
         "  auto-triage [validated]: If tickets are classified on arrival, median resolution time drops 20% (resolution-time → 36)" ;;
+    reporting)
+      printf '%s\n' "Project: acme-support · sponsor Jane Doe" \
+        "North Star: ACME customers resolve their issues without waiting for an agent" \
+        "  Primary KPI: resolution-time" "Stage: mvp since 2026-10-01" \
+        "  Gate: Primary KPI measured over 4 weeks of real use and below 36 min" "KPIs:" \
+        "  resolution-time (primary): baseline 45 min (historical) → latest 38 min on 2026-10-10 → target ≤ 30 min" \
+        "Paths:" \
+        "  auto-triage [measuring]: If tickets are classified on arrival, median resolution time drops 20% (resolution-time → 36)" ;;
     brownfield) no_fde ;;
     *) no_fde ;;
   esac
@@ -107,15 +116,22 @@ JSON
   drift) echo "No drift." ;;
   portfolio) echo "acme-support · mvp · resolution-time (primary): baseline 45 min (historical) → target ≤ 30 min · 0 due · 0 error(s), 0 warning(s) · $(pwd)" ;;
   report)
+    case "${2:-}" in
+      status|close) ;;
+      *) echo "Usage: fde-workflow report [OPTIONS] KIND (status or close)"; exit 0 ;;
+    esac
     mkdir -p .fde/reports
-    file=".fde/reports/2026-10-12-${2:-status}.md"
-    printf '%s\n' "# Status report: acme-support — 2026-10-12" "" "- Sponsor: Jane Doe" "" \
+    file=".fde/reports/2026-10-12-$2.md"
+    title="Status report"; if [ "$2" = close ]; then title="Closing report"; fi
+    printf '%s\n' "# $title: acme-support — 2026-10-12" "" "- Sponsor: Jane Doe" "" \
       "## KPIs" "" "| KPI | Kind | Baseline | Latest | Target | Change | Target met |" \
       "|---|---|---|---|---|---|---|" \
-      "| resolution-time | primary | 45 min (historical, 2026-09-30) | 38 min (2026-10-10) | ≤ 30 min | -7 min (-15.6%) | no |" \
+      "| resolution-time | primary | 45 min (historical, 2026-09-03 to 2026-09-30) | 38 min (2026-09-13 to 2026-10-10) | ≤ 30 min | -7 min (-15.6%) | no |" \
       "" "External factors:" "- resolution-time, 2026-10-10: two agents on holiday" "" \
       "## Paths" "" "| Path | Status | Hypothesis | Expects | Links | Learning |" "|---|---|---|---|---|---|" \
-      "| auto-triage | measuring | If tickets are classified on arrival, median resolution time drops 20% | resolution-time → 36 | 2 |  |" \
+      "| auto-triage | measuring | If tickets are classified on arrival, median resolution time drops 20% | resolution-time → 36 | docs/superpowers/specs/2026-10-02-auto-triage-design.md |  |" \
+      "" "## Drift" "" "None." "" "## Decisions since 2026-10-05" "" \
+      "- 2026-10-06 · path-open · Open path auto-triage — Triage is the biggest delay (approved by Jane Doe)" \
       "" "## Notes" "" "- Before/after comparisons do not prove causation." > "$file"
     echo "$(pwd)/$file"
     ;;
@@ -144,6 +160,6 @@ JSON
     ;;
   project|northstar|stage|decision) echo "Saved." ;;
   hook) ;;
-  ""|--help|-h) echo "Usage: fde-workflow [OPTIONS] COMMAND [ARGS]...  Commands: doctor init detect validate status context project northstar kpi path stage decision hook" ;;
+  ""|--help|-h) echo "Usage: fde-workflow [OPTIONS] COMMAND [ARGS]...  Commands: doctor init detect drift validate status context report project northstar kpi path stage decision hook portfolio" ;;
   *) echo "Error: No such command '$1'." >&2; exit 2 ;;
 esac

@@ -9,8 +9,7 @@ external factors.
 
 ## Input
 
-The caller gives you the KPI id, the window end date (`YYYY-MM-DD`), and whether the user agreed
-to run a `script` recipe.
+The caller gives you the KPI id and the window end date (`YYYY-MM-DD`).
 
 ## Steps
 
@@ -20,9 +19,9 @@ to run a `script` recipe.
 2. Follow the recipe **exactly**:
    - `query`: run it with a tool that can reach the data source it names. Do not rewrite it,
      except for dialect fixes needed to run it, and report any such change.
-   - `script`: only if the caller said the user agreed, run
-     `fde-workflow kpi measure <kpi-id> --window-end <date> --run`. That command records the
-     measurement itself, so say so in your report.
+   - `script`: do not run it. `--run` records the measurement, and recording is the caller's job
+     (it adds the baseline type and external factors). Report that it is a script recipe, with
+     the command it would run.
    - `manual`: you cannot measure it; return the procedure so the caller can walk the user
      through it.
 3. If no available tool can reach the data, stop and say so. Never estimate, infer or invent a

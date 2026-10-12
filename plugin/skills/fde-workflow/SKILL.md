@@ -1,6 +1,6 @@
 ---
 name: fde-workflow
-description: 'Entry point of the FDE direction framework for customer projects: shows where the project stands against its North Star, KPIs, paths and stage, and proposes the next action. Use it when the user asks "how are we doing?", "what is next?", "where does the project stand?", asks about the North Star, KPIs, baselines, paths, gate criteria or the project stage, wants to move the project to another stage, or wants to use the FDE framework in a repository. Also use it at the start of work in a repository with a .fde/ directory.'
+description: 'Entry point of the FDE direction framework for customer projects: shows where the project stands against its North Star, KPIs, paths and stage, and proposes the next action. Use it when the user asks "how are we doing?", "what is next?", "where does the project stand?", asks about the North Star, KPIs, baselines or paths, or wants to use the FDE framework in a repository. Also use it at the start of work in a repository with a .fde/ directory.'
 allowed-tools:
   - Bash(fde-workflow status)
   - Bash(fde-workflow drift)
@@ -18,6 +18,8 @@ session before acting on it.
 
 1. Run `fde-workflow status`.
    - **Command not found:** use the `setup` skill first.
+   - **"No such command" for a command a skill names:** the CLI is older than the plugin; use the
+     `setup` skill to upgrade it.
    - **"No .fde/":** the framework is not set up in this repository. Offer the `adopt` skill and
      stop.
    - **`.fde/` cannot be read** (invalid YAML, a typo, an encoding problem, a broken log line):
