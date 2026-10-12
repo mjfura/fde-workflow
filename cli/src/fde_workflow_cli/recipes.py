@@ -53,6 +53,11 @@ def run_script(fde_dir: Path, recipe: Recipe, start: dt.date, end: dt.date) -> f
             timeout=SCRIPT_TIMEOUT_SECONDS,
             check=False,
         )
+    except OSError as error:
+        raise FdeError(
+            f"Recipe {recipe.file} cannot be executed ({error.strerror}): start it with a "
+            "shebang such as #!/bin/sh."
+        ) from error
     except subprocess.TimeoutExpired as error:
         raise FdeError(
             f"Recipe {recipe.file} did not finish in {SCRIPT_TIMEOUT_SECONDS} s."

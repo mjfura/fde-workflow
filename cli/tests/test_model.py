@@ -3,7 +3,15 @@ import datetime as dt
 import pytest
 from pydantic import ValidationError
 
-from fde_workflow_cli.model import Direction, Kpi, Measurement, Outcome, StageName, StageState
+from fde_workflow_cli.model import (
+    Artifacts,
+    Direction,
+    Kpi,
+    Measurement,
+    Outcome,
+    StageName,
+    StageState,
+)
 from tests.helpers import sample_direction
 
 
@@ -63,3 +71,9 @@ def test_measurement_window_must_be_ordered() -> None:
             source="x",
             recipe_sha256="abc",
         )
+
+
+@pytest.mark.parametrize("pattern", ["/etc/**", "../other/**", "docs/../../x"])
+def test_artifact_globs_stay_inside_the_repository(pattern: str) -> None:
+    with pytest.raises(ValidationError, match="globs"):
+        Artifacts(globs=[pattern])

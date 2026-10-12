@@ -65,3 +65,10 @@ def test_run_script_requires_an_executable(tmp_path: Path) -> None:
     recipe = Recipe(type=RecipeType.SCRIPT, file="measures/k.sh")
     with pytest.raises(FdeError, match="chmod"):
         recipes.run_script(tmp_path / ".fde", recipe, START, END)
+
+
+def test_run_script_without_a_shebang_says_so(tmp_path: Path) -> None:
+    write_recipe(tmp_path, "measures/k.sh", "echo 1\n", executable=True)
+    recipe = Recipe(type=RecipeType.SCRIPT, file="measures/k.sh")
+    with pytest.raises(FdeError, match="shebang"):
+        recipes.run_script(tmp_path / ".fde", recipe, START, END)

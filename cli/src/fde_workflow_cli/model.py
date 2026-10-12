@@ -2,9 +2,18 @@
 
 import datetime as dt
 from enum import StrEnum
+from pathlib import PurePosixPath
 from typing import Annotated, Self
 
-from pydantic import BaseModel, ConfigDict, Field, FiniteFloat, StringConstraints, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    FiniteFloat,
+    StringConstraints,
+    field_validator,
+    model_validator,
+)
 
 SCHEMA_VERSION = 1
 
@@ -152,6 +161,15 @@ class DirectionPath(Record):
 class Artifacts(Record):
     globs: list[str] = Field(default_factory=list)
     pre_framework: list[str] = Field(default_factory=list)
+
+    @field_validator("globs")
+    @classmethod
+    def _globs_stay_inside_the_repository(cls, globs: list[str]) -> list[str]:
+        for pattern in globs:
+            path = PurePosixPath(pattern)
+            if not pattern or path.is_absolute() or ".." in path.parts:
+                raise ValueError(f"{pattern!r} must be a relative pattern inside the repository")
+        return globs
 
 
 class Direction(Record):

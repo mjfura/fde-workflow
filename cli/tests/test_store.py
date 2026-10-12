@@ -93,3 +93,21 @@ def test_locate_finds_fde_in_a_parent_directory(tmp_path: Path) -> None:
     nested.mkdir(parents=True)
     assert locate(nested) == tmp_path.resolve()
     assert locate(tmp_path.parent) == tmp_path.parent.resolve()
+
+
+def test_locate_stops_at_the_git_root(tmp_path: Path) -> None:
+    created(tmp_path)
+    nested_repo = tmp_path / "repo"
+    (nested_repo / ".git").mkdir(parents=True)
+    (nested_repo / "src").mkdir()
+    assert locate(nested_repo / "src") == (nested_repo / "src").resolve()
+
+
+def test_files_that_are_not_utf8_are_reported(tmp_path: Path) -> None:
+    store = created(tmp_path)
+    (tmp_path / ".fde" / "decisions.jsonl").write_bytes(b'{"summary": "Decisi\xf3n"}\n')
+    with pytest.raises(FdeError, match="UTF-8"):
+        store.decisions()
+    store.direction_file.write_bytes(b"schema_version: 1\nproject: {name: Direcci\xf3n}\n")
+    with pytest.raises(FdeError, match="UTF-8"):
+        store.load()

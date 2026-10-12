@@ -19,12 +19,25 @@ SUBDIRECTORIES = ("measures", "discovery", "reports")
 
 
 def locate(start: Path) -> Path:
-    """The closest directory from `start` upwards that contains `.fde/`, else `start`."""
+    """The closest directory from `start` up to its git root that contains `.fde/`, else `start`."""
     start = start.resolve()
     for directory in (start, *start.parents):
         if (directory / FDE_DIR / DIRECTION_FILE).is_file():
             return directory
+        if (directory / ".git").exists():
+            break
     return start
+
+
+def read_text(path: Path) -> str:
+    try:
+        return path.read_text(encoding="utf-8")
+    except UnicodeDecodeError as error:
+        raise FdeError(
+            f"{path} is not valid UTF-8 (byte {error.start}): save it as UTF-8."
+        ) from error
+    except OSError as error:
+        raise FdeError(f"{path} cannot be read: {error.strerror}.") from error
 
 
 def describe_validation_error(source: str, error: ValidationError) -> str:
@@ -59,7 +72,7 @@ class Store:
                 f"No .fde/ in {self.root}: run `fde-workflow init` (or the adopt skill) first."
             )
         try:
-            data = yaml.safe_load(self.direction_file.read_text(encoding="utf-8"))
+            data = yaml.safe_load(read_text(self.direction_file))
         except yaml.YAMLError as error:
             raise FdeError(f"{self.direction_file} is not valid YAML: {error}") from error
         if not isinstance(data, dict):
@@ -114,7 +127,7 @@ def _read_jsonl[M: BaseModel](path: Path, model: type[M]) -> list[M]:
     if not path.is_file():
         return []
     records = []
-    for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+    for number, line in enumerate(read_text(path).splitlines(), start=1):
         if not line.strip():
             continue
         try:
