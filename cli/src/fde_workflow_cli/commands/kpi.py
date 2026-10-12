@@ -131,6 +131,18 @@ def update(
 
 
 @app.command()
+def due(root: RootOption = None) -> None:
+    """List the KPIs that are due: last measured a full window ago or more."""
+    with user_errors():
+        store = open_store(root)
+        found = rules.due_kpis(store.load(), store.measurements())
+    if not found:
+        typer.echo("No KPI is due.")
+    for kpi, last in found:
+        typer.echo(f"{kpi.id}: last measured on {last.taken} (window {kpi.window})")
+
+
+@app.command()
 def measure(
     kpi_id: Annotated[str, typer.Argument()],
     baseline: Annotated[

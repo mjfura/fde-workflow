@@ -5,11 +5,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
-from fde_workflow_cli import recipes
+from fde_workflow_cli import clock, recipes
 from fde_workflow_cli.errors import FdeError
 from fde_workflow_cli.model import (
     Direction,
     DirectionPath,
+    Kpi,
     KpiKind,
     Measurement,
     PathStatus,
@@ -33,6 +34,14 @@ def check(direction: Direction, measurements: list[Measurement], fde_dir: Path) 
         *_kpis(direction, measurements, fde_dir),
         *_paths(direction, measurements),
         *_stage(direction, measurements),
+        *(
+            Issue(
+                "warning",
+                "K6",
+                f"KPI {kpi.id} is due: last measured on {last.taken} (window {kpi.window}).",
+            )
+            for kpi, last in due_kpis(direction, measurements)
+        ),
     ]
     return sorted(issues, key=lambda issue: issue.level != "error")
 
@@ -41,6 +50,25 @@ def latest_baseline(measurements: list[Measurement], kpi_id: str) -> Measurement
     """The KPI's most recently recorded baseline (files keep recording order)."""
     baselines = [m for m in measurements if m.kpi == kpi_id and m.baseline is not None]
     return baselines[-1] if baselines else None
+
+
+def due_kpis(
+    direction: Direction, measurements: list[Measurement]
+) -> list[tuple[Kpi, Measurement]]:
+    """K6: KPIs with a baseline whose last measurement was taken a full window ago or more."""
+    if direction.stage.current is StageName.CLOSED:
+        return []
+    today = clock.today()
+    due = []
+    for kpi in direction.kpis:
+        taken = [m for m in measurements if m.kpi == kpi.id]
+        if latest_baseline(taken, kpi.id) is None:
+            continue
+        last = max(taken, key=lambda m: m.taken)
+        start, _ = kpi.window_ending(today)
+        if last.taken < start:
+            due.append((kpi, last))
+    return due
 
 
 def has_evidence(path: DirectionPath, measurements: list[Measurement]) -> bool:
