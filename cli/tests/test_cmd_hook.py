@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from tests.helpers import ok
+from tests.helpers import make_files, ok
 
 
 def test_session_start_is_silent_without_fde(tmp_path: Path) -> None:
@@ -28,3 +28,41 @@ def test_session_start_reports_an_unreadable_fde(fde: Path) -> None:
     (fde / ".fde" / "direction.yaml").write_text("schema_version: 1\nproject: 3\n")
     result = ok("hook", "session-start", stdin=json.dumps({"cwd": str(fde)}))
     assert "cannot be read" in json.loads(result.stdout)["hookSpecificOutput"]["additionalContext"]
+
+
+def written(repo: Path, relative: str, tool: str = "Write") -> str:
+    return json.dumps(
+        {
+            "cwd": str(repo),
+            "hook_event_name": "PostToolUse",
+            "tool_name": tool,
+            "tool_input": {"file_path": str(repo / relative), "content": "x"},
+        }
+    )
+
+
+def test_post_tool_use_asks_about_a_new_unlinked_artifact(repo: Path) -> None:
+    make_files(repo, "docs/superpowers/specs/new.md")
+    ok("init")
+    result = ok("hook", "post-tool-use", stdin=written(repo, "docs/superpowers/specs/new.md"))
+    output = json.loads(result.stdout)["hookSpecificOutput"]
+    assert output["hookEventName"] == "PostToolUse"
+    assert "docs/superpowers/specs/new.md" in output["additionalContext"]
+    assert "fde-workflow path link" in output["additionalContext"]
+
+
+def test_post_tool_use_ignores_linked_and_unmatched_files(repo: Path) -> None:
+    make_files(repo, "docs/superpowers/specs/old.md", "src/app.py")
+    ok("init")
+    ok("path", "link", "--pre-framework", "docs/superpowers/specs/old.md")
+    for relative in ("docs/superpowers/specs/old.md", "src/app.py"):
+        assert ok("hook", "post-tool-use", stdin=written(repo, relative)).stdout == ""
+    other_tool = written(repo, "docs/superpowers/specs/x.md", tool="Read")
+    assert ok("hook", "post-tool-use", stdin=other_tool).stdout == ""
+
+
+def test_post_tool_use_is_silent_without_fde_or_with_bad_input(repo: Path) -> None:
+    assert ok("hook", "post-tool-use", stdin=written(repo, "specs/a.md")).stdout == ""
+    ok("init")
+    for payload in ("not json", "{}", json.dumps({"cwd": str(repo), "tool_name": "Write"})):
+        assert ok("hook", "post-tool-use", stdin=payload).stdout == ""
