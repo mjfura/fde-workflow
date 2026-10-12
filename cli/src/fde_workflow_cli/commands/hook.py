@@ -7,7 +7,7 @@ from pathlib import Path
 
 import typer
 
-from fde_workflow_cli import detect, rules, summary
+from fde_workflow_cli import detect, registry, rules, summary
 from fde_workflow_cli.errors import FdeError
 from fde_workflow_cli.store import Store, locate
 
@@ -43,6 +43,7 @@ def session_context(payload: str) -> str | None:
             "Run `fde-workflow validate`."
         )
     issues = rules.check(direction, measurements, store.dir)
+    registry.register(store.root)
     return summary.context(direction, measurements, issues, brief=True)
 
 

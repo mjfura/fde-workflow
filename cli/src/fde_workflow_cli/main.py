@@ -6,7 +6,17 @@ from typing import Annotated
 import typer
 
 from fde_workflow_cli import doctor as checks
-from fde_workflow_cli.commands import decision, hook, kpi, northstar, path, project, report, stage
+from fde_workflow_cli.commands import (
+    decision,
+    hook,
+    kpi,
+    northstar,
+    path,
+    portfolio,
+    project,
+    report,
+    stage,
+)
 
 COMMAND = "fde-workflow"
 DIST_NAME = "fde-workflow-cli"
@@ -62,3 +72,4 @@ app.add_typer(path.app, name="path")
 app.add_typer(stage.app, name="stage")
 app.add_typer(decision.app, name="decision")
 app.add_typer(hook.app, name="hook")
+app.add_typer(portfolio.app, name="portfolio")
