@@ -2,7 +2,7 @@ apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: fde-workflow
-  description: "Marketplace with a plugin for working with FDE frameworks, best practices and workflow conventions for FDE roles."
+  description: "Direction framework for FDE customer projects: North Star, KPIs with baselines, paths, stages and decisions, on top of any execution methodology."
   annotations:
     github.com/project-slug: mjfura/fde-workflow
   tags:

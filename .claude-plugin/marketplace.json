@@ -1,6 +1,6 @@
 {
   "name": "fde-workflow",
-  "description": "Marketplace with a plugin for working with FDE frameworks, best practices and workflow conventions for FDE roles.",
+  "description": "Direction framework for FDE customer projects: North Star, KPIs with baselines, paths, stages and decisions, on top of any execution methodology.",
   "owner": {
     "name": "Marco Fura Mendoza",
     "url": "https://github.com/mjfura"
@@ -9,7 +9,7 @@
     {
       "name": "fde-workflow",
       "source": "./plugin",
-      "description": "Marketplace with a plugin for working with FDE frameworks, best practices and workflow conventions for FDE roles."
+      "description": "Direction framework for FDE customer projects: North Star, KPIs with baselines, paths, stages and decisions, on top of any execution methodology."
     }
   ]
 }
