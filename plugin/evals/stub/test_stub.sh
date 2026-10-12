@@ -1,0 +1,37 @@
+#!/bin/sh
+# Tests for the fake fde-workflow CLI used by the plugin evals.
+# Run: sh plugin/evals/stub/test_stub.sh
+set -u
+STUB="$(cd "$(dirname "$0")" && pwd)/fde-workflow"
+WORK=$(mktemp -d)
+trap 'rm -rf "$WORK"' EXIT
+cd "$WORK" || exit 1
+export EVAL_STUB_LOG="$WORK/calls.log"
+failures=0
+
+check() {  # check NAME EXPECTED_EXIT EXPECTED_SUBSTRING SCENARIO ARGS...
+  name=$1 want_exit=$2 want_text=$3 scenario=$4
+  shift 4
+  out=$(EVAL_SCENARIO="$scenario" sh "$STUB" "$@" 2>&1)
+  got_exit=$?
+  if [ "$got_exit" -ne "$want_exit" ] || ! printf '%s' "$out" | grep -qF -- "$want_text"; then
+    echo "FAIL: $name (exit $got_exit, want $want_exit; want text: $want_text)"
+    printf '%s\n' "$out" | sed 's/^/    /'
+    failures=$((failures + 1))
+  else
+    echo "ok: $name"
+  fi
+}
+
+check "version" 0 "fde-workflow 0.1.0" ready --version
+check "missing is command not found" 127 "command not found" missing --version
+check "doctor ready" 0 "Ready." ready doctor
+check "doctor not ready" 1 "Not ready: 1 problem(s)." not-ready doctor
+check "unknown command" 2 "No such command" ready nope
+if grep -qF "fde-workflow doctor" "$EVAL_STUB_LOG"; then
+  echo "ok: calls are logged"
+else
+  echo "FAIL: calls are logged"; failures=$((failures + 1))
+fi
+
+if [ "$failures" -eq 0 ]; then echo "all stub tests passed"; else echo "$failures failure(s)"; exit 1; fi

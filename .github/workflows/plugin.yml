@@ -1,0 +1,61 @@
+# Validate the plugin and its marketplace, test the repository scripts, keep every version in sync
+# and check that the packages' PyPI names are free or belong to this repository. Runs on every PR
+# (a required check must always report); the checks run only when relevant files changed.
+name: plugin
+
+on:
+  pull_request:
+    branches: [main]
+    # "edited" re-runs change detection when the PR's base branch is changed.
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+
+jobs:
+  plugin:
+    name: plugin
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Detect changes
+        id: changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # A failing git diff must fail the job, never skip the checks of a required status.
+          changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA")
+          if grep -qE '^(plugin/|\.claude-plugin/|cli/pyproject\.toml$|mcp/pyproject\.toml$|\.github/scripts/|\.github/workflows/plugin\.yml$)' <<< "$changed"; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "No plugin or version changes; skipping."
+          fi
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        if: steps.changes.outputs.run == 'true'
+        with:
+          python-version: "3.13"
+
+      - name: Script tests and version check
+        if: steps.changes.outputs.run == 'true'
+        run: |
+          python3 -m unittest discover -s .github/scripts -p 'test_*.py'
+          python3 .github/scripts/check_release_version.py
+          python3 .github/scripts/check_pypi_names.py
+          if [ -f plugin/evals/stub/test_stub.sh ]; then sh plugin/evals/stub/test_stub.sh; fi
+
+      - name: Validate plugin and marketplace
+        if: steps.changes.outputs.run == 'true'
+        run: |
+          npm install --global @anthropic-ai/claude-code@2.1.283
+          claude plugin validate --strict plugin
+          claude plugin validate --strict .

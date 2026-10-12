@@ -1,0 +1,15 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: fde-workflow
+  description: "Marketplace with a plugin for working with FDE frameworks, best practices and workflow conventions for FDE roles."
+  annotations:
+    github.com/project-slug: mjfura/fde-workflow
+  tags:
+    - claude-code
+    - plugin
+spec:
+  type: claude-plugin
+  lifecycle: experimental
+  owner: user:default/mjfura
+

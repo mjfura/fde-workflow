@@ -1,0 +1,49 @@
+# Installed by the git-workflow skill. The job name "conventions" is a required status check on main.
+name: git-workflow
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions: {}
+
+jobs:
+  conventions:
+    name: conventions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate branch, PR title and attribution
+        env:
+          # Passed through env (never interpolated into the script) to avoid injection.
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          HEAD_REF: ${{ github.head_ref }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          TYPES='feat|fix|docs|refactor|test|chore|ci|perf'
+          status=0
+
+          if ! printf '%s' "$HEAD_REF" | grep -qE "^(($TYPES)/[a-z0-9]+(-[a-z0-9]+)*|release/v[0-9]+\.[0-9]+)$"; then
+            echo "::error::Branch '$HEAD_REF' must be '<type>/<kebab-case>' with type in: $TYPES"
+            status=1
+          fi
+
+          if ! printf '%s' "$PR_TITLE" | grep -qE "^($TYPES)(\([a-z0-9][a-z0-9-]*\))?!?: [^ ].*[^.]$"; then
+            echo "::error::PR title must be a Conventional Commit: '<type>(<scope>): <summary>' (it becomes the squash commit)."
+            status=1
+          elif [ "${#PR_TITLE}" -gt 72 ]; then
+            echo "::error::PR title is ${#PR_TITLE} chars; keep it <= 72."
+            status=1
+          fi
+
+          if printf '%s\n%s' "$PR_TITLE" "$PR_BODY" | grep -qiE 'co-authored-by:.*(claude|anthropic)|claude-session:|generated with .*claude'; then
+            echo "::error::Remove AI attribution from the PR title/body."
+            status=1
+          fi
+
+          if [ "$BASE_REF" != main ] && ! printf '%s' "$BASE_REF" | grep -qE '^release/v[0-9]+\.[0-9]+$'; then
+            echo "::error::PRs must target main (or a release/vX.Y maintenance branch), not '$BASE_REF'."
+            status=1
+          fi
+
+          exit "$status"

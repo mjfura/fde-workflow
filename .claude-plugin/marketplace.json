@@ -1,0 +1,15 @@
+{
+  "name": "fde-workflow",
+  "description": "Marketplace with a plugin for working with FDE frameworks, best practices and workflow conventions for FDE roles.",
+  "owner": {
+    "name": "Marco Fura Mendoza",
+    "url": "https://github.com/mjfura"
+  },
+  "plugins": [
+    {
+      "name": "fde-workflow",
+      "source": "./plugin",
+      "description": "Marketplace with a plugin for working with FDE frameworks, best practices and workflow conventions for FDE roles."
+    }
+  ]
+}

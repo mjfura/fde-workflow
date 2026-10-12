@@ -1,0 +1,71 @@
+# Lint, type-check, test and smoke-test the CLI in cli/. Runs on every PR (a required check must
+# always report); the suite only runs when cli/ or this workflow changed.
+name: cli
+
+on:
+  pull_request:
+    branches: [main]
+    # "edited" re-runs change detection when the PR's base branch is changed.
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+
+jobs:
+  cli:
+    name: cli
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Detect changes in cli/
+        id: changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # A failing git diff must fail the job, never skip the checks of a required status.
+          changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA")
+          if grep -qE '^(cli/|\.github/workflows/cli\.yml$)' <<< "$changed"; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "No changes in cli/; skipping the suite."
+          fi
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        if: steps.changes.outputs.run == 'true'
+        with:
+          python-version: "3.13"
+
+      # Install Poetry with the 3.13 interpreter so its virtualenv uses 3.13, not the runner's python.
+      - name: Install Poetry
+        if: steps.changes.outputs.run == 'true'
+        run: pipx install --python python3.13 poetry==2.5.1
+
+      - name: Lint, type-check and test
+        if: steps.changes.outputs.run == 'true'
+        working-directory: cli
+        run: |
+          poetry install --no-interaction
+          poetry run ruff check .
+          poetry run ruff format --check .
+          poetry run mypy
+          poetry run pytest
+
+      - name: Build and smoke-test the package
+        if: steps.changes.outputs.run == 'true'
+        working-directory: cli
+        run: |
+          poetry build
+          python3.13 -m venv /tmp/smoke
+          /tmp/smoke/bin/pip install --quiet dist/*.whl
+          command=$(python3.13 -c 'import tomllib; print(next(iter(tomllib.load(open("pyproject.toml", "rb"))["project"]["scripts"])))')
+          "/tmp/smoke/bin/$command" --version
+          "/tmp/smoke/bin/$command" doctor

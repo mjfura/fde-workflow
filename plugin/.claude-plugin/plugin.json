@@ -1,0 +1,13 @@
+{
+  "name": "fde-workflow",
+  "description": "Marketplace with a plugin for working with FDE frameworks, best practices and workflow conventions for FDE roles.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Marco Fura Mendoza",
+    "url": "https://github.com/mjfura"
+  },
+  "homepage": "https://github.com/mjfura/fde-workflow",
+  "repository": "https://github.com/mjfura/fde-workflow",
+  "license": "MIT",
+  "keywords": ["claude-code"]
+}

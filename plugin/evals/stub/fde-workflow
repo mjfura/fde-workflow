@@ -1,0 +1,25 @@
+#!/bin/sh
+# Fake fde-workflow CLI for the plugin evals: never does real work. EVAL_SCENARIO selects
+# the behaviour (ready | missing | not-ready); every call is appended to EVAL_STUB_LOG.
+scenario="${EVAL_SCENARIO:-ready}"
+printf 'fde-workflow %s\n' "$*" >> "${EVAL_STUB_LOG:-./stub-calls.log}" 2>/dev/null || true
+
+if [ "$scenario" = missing ]; then
+  echo "sh: fde-workflow: command not found" >&2
+  exit 127
+fi
+
+case "${1:-}" in
+  --version) echo "fde-workflow 0.1.0" ;;
+  doctor)
+    echo "✓ Python 3.13.2"
+    if [ "$scenario" = not-ready ]; then
+      echo "✗ Example check failed: follow the hint printed on this line"
+      echo "Not ready: 1 problem(s)."
+      exit 1
+    fi
+    echo "Ready."
+    ;;
+  ""|--help|-h) echo "Usage: fde-workflow [OPTIONS] COMMAND [ARGS]...  Commands: doctor" ;;
+  *) echo "Error: No such command '$1'." >&2; exit 2 ;;
+esac

@@ -1,0 +1,59 @@
+[project]
+name = "fde-workflow-cli"
+version = "0.1.0"
+description = "Marketplace with a plugin for working with FDE frameworks, best practices and workflow conventions for FDE roles."
+authors = [{ name = "Marco Fura Mendoza" }]
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = ["claude-code", "cli"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+]
+requires-python = ">=3.13,<4.0"
+dependencies = [
+    "typer (>=0.27,<1.0)",
+]
+
+[project.scripts]
+fde-workflow = "fde_workflow_cli.main:app"
+
+[project.urls]
+Homepage = "https://github.com/mjfura/fde-workflow"
+Repository = "https://github.com/mjfura/fde-workflow"
+Issues = "https://github.com/mjfura/fde-workflow/issues"
+
+[tool.poetry]
+packages = [{ include = "fde_workflow_cli", from = "src" }]
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^9.1"
+ruff = "^0.16"
+mypy = "^2.3"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "SIM", "RUF", "S", "PT"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+files = ["src", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
