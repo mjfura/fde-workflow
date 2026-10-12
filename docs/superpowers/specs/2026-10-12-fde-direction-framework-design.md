@@ -204,8 +204,10 @@ Existing projects already have specs, plans and history, and their "before" may 
 
 ### 4.1 Principles
 
-1. **The CLI is the only writer of `.fde/`.** It validates, records decisions and enforces the
-   rules. Skills never edit `.fde/` files directly.
+1. **The CLI is the only writer of `.fde/`'s structured files** (`direction.yaml`,
+   `measurements.jsonl`, `decisions.jsonl`). It validates, records decisions and enforces the
+   rules. Skills never edit those files directly; they only write free-form files: recipes in
+   `measures/` and notes in `discovery/`.
 2. **Skills bring judgement and conversation**: interviewing, inferring, proposing; they write
    through the CLI.
 3. **Hooks only add context and nudges.** They never block and never fail a session: if the CLI is
