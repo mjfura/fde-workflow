@@ -296,7 +296,7 @@ Decision (one JSONL line):
 ```
 
 Decision types: `north-star-change`, `target-change`, `path-open`, `path-validate`,
-`path-discard`, `stage-gate`, `stage-set`, `scope-change`, `other`.
+`path-discard`, `stage-gate`, `stage-set`, `baseline-change`, `scope-change`, `other`.
 
 ### 4.3 CLI (`fde-workflow`)
 

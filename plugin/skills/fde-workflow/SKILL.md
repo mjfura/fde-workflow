@@ -18,16 +18,22 @@ session before acting on it.
    - **Command not found:** use the `setup` skill first.
    - **"No .fde/":** the framework is not set up in this repository. Offer the `adopt` skill and
      stop.
+   - **`.fde/` cannot be read** (invalid YAML, a typo, an encoding problem, a broken log line):
+     show the error. Propose the smallest fix to the file it names, apply it only after the user
+     agrees, then run `fde-workflow validate`. This is the only case where `.fde/` files are
+     edited by hand.
 2. Run `fde-workflow validate` and propose **one** next action, the first that applies:
    1. **Errors (✗):** explain each and fix it with the CLI command it names.
    2. **No North Star, or an inferred one (N1, C1):** the `discovery` skill.
-   3. **A KPI without baseline (K3) or with a changed recipe (K4):** the `kpi` skill, baseline mode.
-   4. **Stage without gate criteria (S1):** agree them now (see *Stage* below).
-   5. **A path in `measuring`:** the `kpi` skill to measure it, then the `path` skill to validate
+   3. **Inferred stage (C1):** check the stage with the user against the evidence; once they agree,
+      `fde-workflow stage confirm --approved-by "<who>"`, or `fde-workflow stage set` to correct it.
+   4. **A KPI without baseline (K3) or with a changed recipe (K4):** the `kpi` skill, baseline mode.
+   5. **Stage without gate criteria (S1):** agree them now (see *Stage* below).
+   6. **A path in `measuring`:** the `kpi` skill to measure it, then the `path` skill to validate
       or discard it.
-   6. **Inferred paths (C1):** the `path` skill to confirm or discard them.
-   7. **Primary KPI not measured in this stage (S3):** the `kpi` skill.
-   8. **Nothing pending:** summarise and ask what the user wants to work on next; new work goes
+   7. **Inferred paths (C1):** the `path` skill to confirm or discard them.
+   8. **Primary KPI not measured in this stage (S3):** the `kpi` skill.
+   9. **Nothing pending:** summarise and ask what the user wants to work on next; new work goes
       through the `path` skill's alignment check.
 3. Answer in a few lines: the North Star, the stage, each KPI as baseline → latest → target, live
    paths, and the recommended action with the skill or command that does it.

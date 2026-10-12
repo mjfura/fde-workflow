@@ -5,9 +5,11 @@
 #   fresh                         .fde/ just initialised: no North Star, no KPIs
 #   kpi-no-baseline               North Star and a primary KPI with a query recipe, no baseline
 #   path-measuring                path auto-triage built and in measuring, no measurement since
-#   brownfield                    no .fde/ yet; superpowers specs and plans exist
+#   brownfield                    no .fde/ yet; superpowers specs and plans exist. After `init`
+#                                 (marker file .fde-stub-init) it behaves as an initialised repo.
 scenario="${EVAL_SCENARIO:-ready}"
 printf 'fde-workflow %s\n' "$*" >> "${EVAL_STUB_LOG:-./stub-calls.log}" 2>/dev/null || true
+if [ "$scenario" = brownfield ] && [ -f .fde-stub-init ]; then scenario=adopted; fi
 
 if [ "$scenario" = missing ]; then
   echo "sh: fde-workflow: command not found" >&2
@@ -21,7 +23,7 @@ no_fde() {
 
 status() {
   case "$scenario" in
-    fresh)
+    fresh|adopted)
       printf '%s\n' "Project: acme-support" "North Star: not defined" \
         "Stage: discovery since 2026-10-12" "KPIs: none" "Paths: none" "Issues:" \
         "  ! [N1] No North Star yet: define it with the discovery skill." \
@@ -71,11 +73,13 @@ case "${1:-}" in
     echo "Valid with 1 warning(s)."
     ;;
   detect)
-    if [ "$scenario" = brownfield ]; then
-      cat <<'JSON'
+    if [ "$scenario" = brownfield ] || [ "$scenario" = adopted ]; then
+      initialised=false
+      if [ "$scenario" = adopted ]; then initialised=true; fi
+      cat <<JSON
 {
   "root": ".",
-  "fde_initialised": false,
+  "fde_initialised": $initialised,
   "methodology": "superpowers",
   "globs": ["docs/superpowers/specs/**", "docs/superpowers/plans/**"],
   "readme": "README.md",
@@ -109,7 +113,11 @@ JSON
     fi
     echo "Saved."
     ;;
-  init|project|northstar|stage|decision) echo "Saved." ;;
+  init)
+    if [ "$scenario" = brownfield ]; then : > .fde-stub-init; fi
+    echo "Created .fde/ (stage discovery)."
+    ;;
+  project|northstar|stage|decision) echo "Saved." ;;
   hook) ;;
   ""|--help|-h) echo "Usage: fde-workflow [OPTIONS] COMMAND [ARGS]...  Commands: doctor init detect validate status context project northstar kpi path stage decision hook" ;;
   *) echo "Error: No such command '$1'." >&2; exit 2 ;;

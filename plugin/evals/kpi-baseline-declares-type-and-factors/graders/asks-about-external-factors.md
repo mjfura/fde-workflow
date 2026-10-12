@@ -1,4 +1,5 @@
 ---
 type: regex
-pattern: '(?i)(external factor|factores externos)'
+flags: i
+pattern: '(external factor|factores externos)'
 ---

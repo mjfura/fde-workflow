@@ -1,4 +1,5 @@
 ---
 type: regex
-pattern: '(?i)(outcome|resultado|for whom|para qui[eé]n|what .*for|para qu[eé])'
+flags: i
+pattern: '(outcome|resultado|for whom|para qui[eé]n|what .*for|para qu[eé])'
 ---

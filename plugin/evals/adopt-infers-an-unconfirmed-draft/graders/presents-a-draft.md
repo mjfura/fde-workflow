@@ -1,4 +1,5 @@
 ---
 type: regex
-pattern: '(?i)(hypothes|hip[oó]tesis|inferred|inferid|draft|borrador|unconfirmed|sin confirmar)'
+flags: i
+pattern: '(hypothes|hip[oó]tesis|inferred|inferid|draft|borrador|unconfirmed|sin confirmar)'
 ---

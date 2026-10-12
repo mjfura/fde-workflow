@@ -1,4 +1,5 @@
 ---
 type: regex
-pattern: '(?i)(historical|hist[oó]rico).*(late|tard[ií]o)|(late|tard[ií]o).*(historical|hist[oó]rico)'
+flags: i
+pattern: '(historical|hist[oó]rico)[\s\S]*(late|tard[ií]o)|(late|tard[ií]o)[\s\S]*(historical|hist[oó]rico)'
 ---

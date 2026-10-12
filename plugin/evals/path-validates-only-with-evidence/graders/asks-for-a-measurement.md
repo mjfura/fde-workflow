@@ -1,4 +1,5 @@
 ---
 type: regex
-pattern: '(?i)(measur|medi)'
+flags: i
+pattern: '(measur|medi)'
 ---
