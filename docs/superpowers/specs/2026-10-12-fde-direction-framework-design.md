@@ -39,7 +39,8 @@ direction layer only **links to and reads** execution artifacts; it never writes
 - Creating or managing specs, plans or tasks (execution methodologies do that).
 - Technical decision records (ADRs); only direction-level decisions are logged.
 - Methodology-specific adapters that parse spec or plan formats.
-- Multi-project portfolio views, scheduled measurements, dashboards (deferred; see §9).
+- Dashboards, and running recipes unattended on a schedule: the framework reports when a KPI is
+  due (K6) and a person or Claude measures it.
 
 ## 2. The framework
 
@@ -75,6 +76,9 @@ Seven components. Each has a purpose, its content, and rules. Rules marked **[V]
   - K4 **[V]** If a KPI's recipe changes after its baseline, the baseline must be measured again with
     the new recipe; until then the comparison is flagged as invalid.
   - K5 **[V]** Changing a target requires a recorded decision with a reason and the approver.
+  - K6 **[V]** A KPI with a baseline is **due** when its last measurement was taken a full window
+    ago or more (e.g. 28 days for a `28d` window) and the project is not closed. Due KPIs are
+    reported as warnings in `validate`, `status`, the session context and reports.
 
 ### 2.3 Paths
 
@@ -207,7 +211,7 @@ Existing projects already have specs, plans and history, and their "before" may 
 1. **The CLI is the only writer of `.fde/`'s structured files** (`direction.yaml`,
    `measurements.jsonl`, `decisions.jsonl`). It validates, records decisions and enforces the
    rules. Skills never edit those files directly; they only write free-form files: recipes in
-   `measures/` and notes in `discovery/`.
+   `measures/`, notes in `discovery/`, and the narrative of reports in `reports/`.
 2. **Skills bring judgement and conversation**: interviewing, inferring, proposing; they write
    through the CLI.
 3. **Hooks only add context and nudges.** They never block and never fail a session: if the CLI is
@@ -298,6 +302,12 @@ Decision (one JSONL line):
 Decision types: `north-star-change`, `target-change`, `path-open`, `path-validate`,
 `path-discard`, `stage-gate`, `stage-set`, `baseline-change`, `scope-change`, `other`.
 
+**Portfolio registry (outside the repository).** `$XDG_CONFIG_HOME/fde-workflow/projects.json`
+(default `~/.config/fde-workflow/projects.json`) lists the roots of the repositories that use the
+framework on this machine. `init` and the commands that read a direction (`status`, `validate`,
+`context`, the SessionStart hook) add the current repository to it, so it stays up to date
+without any action. It holds paths only; every view reads each repository's `.fde/`.
+
 ### 4.3 CLI (`fde-workflow`)
 
 Extends the existing Typer application in `cli/src/fde_workflow_cli/`. Every command works on
@@ -314,6 +324,7 @@ and `--approved-by` where §2 says so.
 | `northstar set …` | Create or change the North Star (a change records a decision) |
 | `northstar confirm` | Mark an inferred North Star as confirmed |
 | `kpi add\|update <id> …` | Define or change a KPI (target change records a decision) |
+| `kpi due` | List the KPIs that are due (K6), with their last measurement date |
 | `kpi measure <id> [--baseline historical\|late] [--window-end DATE] [--value N --source TEXT] [--factors TEXT] [--run]` | Record a measurement. For `script` recipes, `--run` executes the recipe and records its output; without `--run` it prints the command it would run. For `query` and `manual` recipes, `--value` and `--source` are required |
 | `path add\|update <id> …` | Define or change a path (`add` records `path-open`) |
 | `path move <id> <status> --reason` | Change status, enforcing P2 and P3; moving to `active` sets `activated` |
@@ -324,7 +335,9 @@ and `--approved-by` where §2 says so.
 | `stage decide go\|recycle\|hold\|kill --reason --approved-by` | Record a gate decision and apply it |
 | `decision add …` | Record any other direction decision |
 | `drift` | List artifacts matching the globs that are neither linked nor pre-framework |
-| `report status\|close` | Write a Markdown report with the data tables to `.fde/reports/` and print its path |
+| `report status\|close [--since DATE]` | Write a Markdown report with the data tables to `.fde/reports/` and print its path; `status` lists the decisions since the previous status report (or `--since`), `close` lists them all |
+| `portfolio` | One line per registered repository: project, stage, primary KPI baseline → latest → target, due KPIs, errors and warnings |
+| `portfolio forget <path>` | Remove a repository from the registry |
 | `hook session-start` / `hook post-tool-use` | Hook entry points: read the hook JSON from stdin, print hook output; always exit 0 |
 | `doctor` (existing) | Adds a check: when `.fde/` exists, its `schema_version` is supported |
 
@@ -345,7 +358,15 @@ runs a recipe goes through Claude Code's permission prompt.
 | `stage` | "We're moving to MVP", "are we ready for production?" | Agrees gate criteria on entry; evaluates them with evidence on exit; records the decision with the sponsor |
 | `report` | "Prepare the sponsor update", "closing report" | Generates the report with the CLI and writes the narrative: KPIs vs baseline and target, external factors, late baselines, paths and learning, drift, decisions |
 
-### 4.5 Hooks (`plugin/hooks/hooks.json`)
+### 4.5 Agent (`plugin/agents/kpi-measurer.md`)
+
+A subagent that takes one KPI and a window, follows its recipe with the tools it has (running a
+`script` recipe only when the calling skill says the user agreed; a database or analytics MCP
+server for `query` recipes) and returns the value, its source and the evidence. It never records:
+the `kpi` skill asks about external factors and records the measurement. It keeps long queries
+and data exploration out of the main conversation.
+
+### 4.6 Hooks (`plugin/hooks/hooks.json`)
 
 | Event | Matcher | Behaviour |
 |---|---|---|
@@ -382,18 +403,13 @@ A hook on every user prompt was considered and rejected: constant alignment chec
   PostToolUse context leads to an alignment question. Evals run only with the owner's approval.
 - `make cli-check` and `make plugin-check` stay the gates before each commit.
 
-## 7. Delivery phases
+## 7. Delivery
 
-1. **Core, usable on a real project:** data model; CLI `init`, `detect`, `validate`, `status`,
-   `context`, `northstar`, `kpi`, `path` (including `link`), `stage`, `decision`, `hook
-   session-start`, `doctor` check; skills `fde-workflow`, `adopt`, `discovery`, `kpi`, `path`, and
-   the `setup` hand-over; SessionStart hook. → **Used on a real customer project before phase 2.**
-2. **Governance:** CLI `drift`, `report`, `hook post-tool-use`; skills `stage` and `report`;
-   PostToolUse hook.
-3. **Only if real use asks for it:** a measurement subagent, scheduled measurements, a
-   multi-project view.
-
-Each phase gets its own implementation plan.
+The core (data model, rules, the commands up to `decision`, the SessionStart hook and the
+`fde-workflow`, `adopt`, `discovery`, `kpi` and `path` skills) shipped in v0.1.x. Everything else
+in this design (`drift`, `report`, `kpi due`, `portfolio`, the PostToolUse hook, the `stage` and
+`report` skills and the `kpi-measurer` agent) ships together in the next release. Later changes
+come from real use, not from planned phases.
 
 ## 8. Foundations
 
@@ -431,6 +447,5 @@ with late baselines, so that the claimed impact stays honest.
 
 ## 9. Deferred
 
-- Measurement subagent, scheduled measurements, multi-project view (phase 3, only if needed).
 - Methodology adapters that read plan progress (rejected for now: they couple the plugin to formats
   it does not own).
