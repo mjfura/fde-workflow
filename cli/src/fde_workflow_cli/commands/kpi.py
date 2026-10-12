@@ -158,6 +158,8 @@ def measure(
         start, end = kpi.window_ending(
             parse_date(window_end, "--window-end") if window_end else clock.today()
         )
+        if end > clock.today():
+            raise FdeError(f"--window-end {end} is in the future.")
         fingerprint = recipes.fingerprint(store.dir, kpi.recipe)
         if fingerprint is None:
             raise FdeError(f"Recipe .fde/{kpi.recipe.file} does not exist: write it first.")

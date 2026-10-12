@@ -26,13 +26,15 @@ def measured(
     baseline: BaselineType | None = None,
     kpi: str = "resolution-time",
     sha: str | None = None,
+    window_end: str | None = None,
 ) -> Measurement:
     day = dt.date.fromisoformat(taken)
+    end = dt.date.fromisoformat(window_end) if window_end else day
     return Measurement(
         kpi=kpi,
         taken=day,
-        window_start=day - dt.timedelta(days=27),
-        window_end=day,
+        window_start=end - dt.timedelta(days=27),
+        window_end=end,
         value=40,
         baseline=baseline,
         source="Zendesk",
@@ -109,7 +111,7 @@ def test_validated_path_needs_a_measurement_after_activation(tmp_path: Path) -> 
     assert "error:P2" in check(tmp_path, direction, [BASELINE, same_day])
     later_baseline = measured("2026-10-05", baseline=BaselineType.LATE)
     assert "error:P2" in check(tmp_path, direction, [BASELINE, later_baseline])
-    assert "error:P2" not in check(tmp_path, direction, [BASELINE, measured("2026-10-04")])
+    assert "error:P2" not in check(tmp_path, direction, [BASELINE, measured("2026-11-01")])
 
 
 def test_inferred_items_need_confirmation(tmp_path: Path) -> None:
@@ -143,3 +145,17 @@ def test_errors_come_first(tmp_path: Path) -> None:
     levels = [issue.level for issue in rules.check(direction, [], tmp_path / ".fde")]
     assert levels == sorted(levels, key=lambda level: level != "error")
     assert levels[0] == "error"
+
+
+def test_evidence_must_measure_a_window_after_activation(tmp_path: Path) -> None:
+    direction = sample_direction()
+    direction.paths[0].status = PathStatus.VALIDATED
+    old_window = measured("2026-11-01", window_end="2026-09-30")
+    assert "error:P2" in check(tmp_path, direction, [BASELINE, old_window])
+    straddling = measured("2026-10-20")
+    assert "error:P2" in check(tmp_path, direction, [BASELINE, straddling])
+
+
+def test_stage_measurement_must_cover_the_stage(tmp_path: Path) -> None:
+    late_historical = measured("2026-10-12", BaselineType.HISTORICAL, window_end="2026-09-30")
+    assert "warning:S3" in check(tmp_path, sample_direction(), [late_historical])

@@ -39,7 +39,8 @@ from before the framework: `fde-workflow path link --pre-framework <file>...`.
 `fde-workflow path move <id> <status> --reason "..."`:
 - `active` when work starts; `measuring` when it is built and in use.
 - In `measuring`, measure its KPIs with the `kpi` skill. Then:
-  - `validated` only when a measurement taken after the path became active shows the effect;
+  - `validated` only when a measurement whose whole window comes after the path became active
+    shows the effect (wait a full KPI window after activation);
     otherwise the CLI refuses ([P2]). Never move a path to validated because it is built,
     deployed or "looks good": measure first.
   - `discarded` when the evidence says no or priorities change, with what it taught us:

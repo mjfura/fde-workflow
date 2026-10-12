@@ -44,12 +44,13 @@ def latest_baseline(measurements: list[Measurement], kpi_id: str) -> Measurement
 
 
 def has_evidence(path: DirectionPath, measurements: list[Measurement]) -> bool:
-    """P2: a non-baseline measurement of a targeted KPI taken after the path became active."""
+    """P2: a non-baseline measurement of a targeted KPI whose whole window follows activation."""
     activated = path.activated
     if activated is None:
         return False
     return any(
-        m.kpi in path.expects and m.baseline is None and m.taken > activated for m in measurements
+        m.kpi in path.expects and m.baseline is None and m.window_start > activated
+        for m in measurements
     )
 
 
@@ -126,7 +127,7 @@ def _paths(direction: Direction, measurements: list[Measurement]) -> Iterator[Is
                 "error",
                 "P2",
                 f"Path {path.id} cannot be validated without evidence: it needs a measurement of "
-                f"{', '.join(path.expects)} taken after it became active.",
+                f"{', '.join(path.expects)} whose window starts after it became active.",
             )
         if not path.confirmed:
             yield Issue(
@@ -157,7 +158,7 @@ def _stage(direction: Direction, measurements: list[Measurement]) -> Iterator[Is
     if (
         stage.current in STAGES_THAT_MEASURE
         and primary is not None
-        and not any(m.kpi == primary and m.taken >= stage.entered for m in measurements)
+        and not any(m.kpi == primary and m.window_end >= stage.entered for m in measurements)
     ):
         yield Issue(
             "warning",

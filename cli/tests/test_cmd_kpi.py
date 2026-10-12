@@ -110,3 +110,9 @@ def test_status_and_context_show_kpis(fde: Path) -> None:
     context = ok("context", "--brief").output
     assert context.startswith("FDE direction of this repository")
     assert "Gate criteria: 0" in context
+
+
+def test_measure_refuses_a_window_ending_in_the_future(fde: Path) -> None:
+    add_kpi(fde)
+    args = ("--value", "40", "--source", "s", "--window-end", "2026-10-13")
+    assert "future" in fails("kpi", "measure", "resolution-time", *args).output
