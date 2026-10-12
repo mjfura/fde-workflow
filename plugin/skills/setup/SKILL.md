@@ -4,6 +4,7 @@ description: 'Install, verify or troubleshoot what the fde-workflow plugin needs
 allowed-tools:
   - Bash(fde-workflow --version)
   - Bash(fde-workflow doctor)
+  - Bash(fde-workflow status)
 ---
 
 # Set up fde-workflow
@@ -27,3 +28,7 @@ is installed and `fde-workflow doctor` ends with `Ready.`
    printed next to each ✗.
 3. Repeat `fde-workflow doctor` until it ends with `Ready.`
 
+## Next
+
+When the CLI is ready, run `fde-workflow status` in the current repository. If it reports that
+there is no `.fde/`, offer the `adopt` skill to set up the FDE framework here.

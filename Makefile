@@ -16,6 +16,7 @@ plugin-check: ## Validate the plugin and marketplace, check versions and PyPI na
 	claude plugin validate --strict plugin
 	claude plugin validate --strict .
 	sh plugin/evals/stub/test_stub.sh
+	sh plugin/hooks/test_fde_hook.sh
 
 cli-check: ## Lint, type-check and test the CLI
 	cd cli && poetry run ruff check . && poetry run ruff format --check . && poetry run mypy && poetry run pytest

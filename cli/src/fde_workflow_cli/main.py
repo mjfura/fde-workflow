@@ -6,6 +6,7 @@ from typing import Annotated
 import typer
 
 from fde_workflow_cli import doctor as checks
+from fde_workflow_cli.commands import decision, hook, kpi, northstar, path, project, stage
 
 COMMAND = "fde-workflow"
 DIST_NAME = "fde-workflow-cli"
@@ -45,3 +46,17 @@ def doctor() -> None:
         typer.echo(f"Not ready: {problems} problem(s).")
         raise typer.Exit(1)
     typer.echo("Ready.")
+
+
+app.command()(project.init)
+app.command("detect")(project.detect_command)
+app.command()(project.validate)
+app.command()(project.status)
+app.command()(project.context)
+app.add_typer(project.app, name="project")
+app.add_typer(kpi.app, name="kpi")
+app.add_typer(northstar.app, name="northstar")
+app.add_typer(path.app, name="path")
+app.add_typer(stage.app, name="stage")
+app.add_typer(decision.app, name="decision")
+app.add_typer(hook.app, name="hook")

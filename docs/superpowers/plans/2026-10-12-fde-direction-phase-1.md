@@ -46,7 +46,9 @@ The spec stays the source of truth; these details are decided here:
 - Rule **C1**: inferred items (North Star, paths, stage) are warnings until confirmed.
 - **K4** (recipe changed after the baseline) is a warning, so it never blocks other work.
 - Replacing agreed gate criteria needs `--reason` and `--approved-by` and records a decision.
-- **P2** counts only non-baseline measurements taken strictly after the activation date.
+- **P2** counts only non-baseline measurements whose whole window starts after the activation
+  date (changed in the final review: the date a measurement was taken says nothing about the
+  period it measures).
 
 ## Review Focus
 

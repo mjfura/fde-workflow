@@ -1,6 +1,6 @@
 {
   "name": "fde-workflow",
-  "description": "Marketplace with a plugin for working with FDE frameworks, best practices and workflow conventions for FDE roles.",
+  "description": "Direction framework for FDE customer projects: North Star, KPIs with baselines, paths, stages and decisions, on top of any execution methodology.",
   "version": "0.1.0",
   "author": {
     "name": "Marco Fura Mendoza",
@@ -9,5 +9,5 @@
   "homepage": "https://github.com/mjfura/fde-workflow",
   "repository": "https://github.com/mjfura/fde-workflow",
   "license": "MIT",
-  "keywords": ["claude-code"]
+  "keywords": ["claude-code", "fde", "north-star", "kpi"]
 }

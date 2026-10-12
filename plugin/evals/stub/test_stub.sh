@@ -28,6 +28,13 @@ check "missing is command not found" 127 "command not found" missing --version
 check "doctor ready" 0 "Ready." ready doctor
 check "doctor not ready" 1 "Not ready: 1 problem(s)." not-ready doctor
 check "unknown command" 2 "No such command" ready nope
+check "no .fde before adoption" 1 "No .fde/" brownfield status
+check "fresh status" 0 "No North Star yet" fresh status
+check "detect lists specs" 0 "answer-suggestions-design.md" brownfield detect
+check "measure shows the recipe" 0 "Take the measurement" kpi-no-baseline kpi measure resolution-time
+check "measure records a value" 0 "Recorded." kpi-no-baseline kpi measure resolution-time --value 45 --source s
+check "validated needs evidence" 1 "[P2]" path-measuring path move auto-triage validated --reason r
+check "validate lists warnings" 0 "[K3]" kpi-no-baseline validate
 if grep -qF "fde-workflow doctor" "$EVAL_STUB_LOG"; then
   echo "ok: calls are logged"
 else

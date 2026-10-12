@@ -1,7 +1,7 @@
 [project]
 name = "fde-workflow-cli"
 version = "0.1.0"
-description = "Marketplace with a plugin for working with FDE frameworks, best practices and workflow conventions for FDE roles."
+description = "Direction framework for FDE customer projects: North Star, KPIs with baselines, paths, stages and decisions, on top of any execution methodology."
 authors = [{ name = "Marco Fura Mendoza" }]
 readme = "README.md"
 license = "MIT"
@@ -17,6 +17,8 @@ classifiers = [
 requires-python = ">=3.13,<4.0"
 dependencies = [
     "typer (>=0.27,<1.0)",
+    "pydantic (>=2.14,<3)",
+    "pyyaml (>=6.0.3,<7)",
 ]
 
 [project.scripts]
@@ -34,6 +36,7 @@ packages = [{ include = "fde_workflow_cli", from = "src" }]
 pytest = "^9.1"
 ruff = "^0.16"
 mypy = "^2.3"
+types-pyyaml = "^6.0.12.20260906"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

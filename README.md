@@ -1,6 +1,6 @@
 # fde-workflow
 
-Marketplace with a plugin for working with FDE frameworks, best practices and workflow conventions for FDE roles.
+Direction framework for FDE customer projects: North Star, KPIs with baselines, paths, stages and decisions, on top of any execution methodology.
 
 This repository is a Claude Code plugin marketplace with one plugin, `fde-workflow`, in
 [`plugin/`](plugin/), and the Python packages it uses, published to PyPI.
@@ -24,6 +24,7 @@ Then ask Claude to set it up, or run `/fde-workflow:setup`.
 | `plugin/` | The Claude Code plugin: manifest and skills, evals |
 | `cli/` | The `fde-workflow` CLI, published to PyPI as `fde-workflow-cli` |
 | `docs/releasing.md` | How to publish a release |
+| `docs/superpowers/` | Design specs and implementation plans |
 
 ## Development
 
