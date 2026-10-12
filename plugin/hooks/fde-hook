@@ -1,0 +1,6 @@
+#!/bin/sh
+# Runs `fde-workflow hook <event>` with the hook's JSON on stdin when the CLI is installed;
+# otherwise does nothing. A hook must never interrupt a session, so this always exits 0.
+command -v fde-workflow >/dev/null 2>&1 || exit 0
+fde-workflow hook "$@" || true
+exit 0

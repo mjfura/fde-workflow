@@ -52,6 +52,7 @@ jobs:
           python3 .github/scripts/check_release_version.py
           python3 .github/scripts/check_pypi_names.py
           if [ -f plugin/evals/stub/test_stub.sh ]; then sh plugin/evals/stub/test_stub.sh; fi
+          if [ -f plugin/hooks/test_fde_hook.sh ]; then sh plugin/hooks/test_fde_hook.sh; fi
 
       - name: Validate plugin and marketplace
         if: steps.changes.outputs.run == 'true'
