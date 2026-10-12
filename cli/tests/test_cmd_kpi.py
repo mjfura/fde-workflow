@@ -1,5 +1,9 @@
+import datetime as dt
 from pathlib import Path
 
+import pytest
+
+from fde_workflow_cli import clock
 from tests.helpers import add_kpi, cli, decisions, fails, measurements, ok, write_recipe
 
 
@@ -138,3 +142,11 @@ def test_a_new_baseline_after_a_recipe_change_is_logged(fde: Path) -> None:
     ok(*args, "--baseline", "late")
     [decision] = decisions(fde)
     assert decision["reason"] == "The recipe changed after the previous baseline."
+
+
+def test_kpi_due_lists_due_kpis(fde: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    add_kpi(fde)
+    assert "No KPI is due." in ok("kpi", "due").output
+    ok("kpi", "measure", "resolution-time", "--value", "45", "--source", "s", "--baseline", "late")
+    monkeypatch.setattr(clock, "today", lambda: dt.date(2026, 11, 9))
+    assert "resolution-time: last measured on 2026-10-12 (window 28d)" in ok("kpi", "due").output

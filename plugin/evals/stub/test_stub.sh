@@ -35,9 +35,27 @@ check "measure shows the recipe" 0 "Take the measurement" kpi-no-baseline kpi me
 check "measure records a value" 0 "Recorded." kpi-no-baseline kpi measure resolution-time --value 45 --source s
 check "validated needs evidence" 1 "[P2]" path-measuring path move auto-triage validated --reason r
 check "validate lists warnings" 0 "[K3]" kpi-no-baseline validate
+check "drift" 0 "No drift." path-measuring drift
+check "kpi due" 0 "No KPI is due." path-measuring kpi due
+check "report writes a file" 0 ".fde/reports/2026-10-12-status.md" reporting report status
+check "report close prints its path" 0 "2026-10-12-close.md" reporting report close
+check "report help writes nothing" 0 "Usage" reporting report --help
+check "reporting status has a latest value" 0 "latest 38 min" reporting status
+check "usage lists the commands" 0 "drift" ready --help
+check "mvp gate status" 0 "Gate: Primary KPI measured" mvp-gate status
 check "brownfield init creates the marker" 0 "Created .fde/" brownfield init --preset superpowers
 check "brownfield after init has a direction" 0 "North Star: not defined" brownfield status
 check "brownfield detect after init" 0 '"fde_initialised": true' brownfield detect
+if grep -qF "# Status report" .fde/reports/2026-10-12-status.md 2>/dev/null; then
+  echo "ok: report status is titled status"
+else
+  echo "FAIL: report status is titled status"; failures=$((failures + 1))
+fi
+if grep -qF "# Closing report" .fde/reports/2026-10-12-close.md 2>/dev/null; then
+  echo "ok: report close is titled close"
+else
+  echo "FAIL: report close is titled close"; failures=$((failures + 1))
+fi
 if grep -qF "fde-workflow doctor" "$EVAL_STUB_LOG"; then
   echo "ok: calls are logged"
 else

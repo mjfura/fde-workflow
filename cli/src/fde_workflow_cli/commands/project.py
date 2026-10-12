@@ -6,7 +6,7 @@ from typing import Annotated
 
 import typer
 
-from fde_workflow_cli import clock, detect, rules, summary
+from fde_workflow_cli import clock, detect, registry, rules, summary
 from fde_workflow_cli.commands.common import RootOption, open_store, user_errors
 from fde_workflow_cli.errors import FdeError
 from fde_workflow_cli.model import Artifacts, Direction, Project, StageState
@@ -47,6 +47,7 @@ def init(
                 artifacts=Artifacts(globs=globs),
             )
         )
+    registry.register(store.root)
     typer.echo(
         f"Created {store.dir} (stage discovery; artifact globs: {', '.join(globs) or 'none'})."
     )
@@ -60,11 +61,20 @@ def detect_command(root: RootOption = None) -> None:
         typer.echo(json.dumps(detect.report(store.root, direction), indent=2))
 
 
+def drift(root: RootOption = None) -> None:
+    """List execution artifacts that no path links and that are not pre-framework (rule L1)."""
+    with user_errors():
+        store = open_store(root)
+        found = detect.drift(store.root, store.load())
+    typer.echo("\n".join(found) if found else "No drift.")
+
+
 def validate(root: RootOption = None) -> None:
     """Check .fde/ against the framework's rules; exit 1 when a rule is broken."""
     with user_errors():
         store = open_store(root)
         issues = rules.check(store.load(), store.measurements(), store.dir)
+    registry.register(store.root)
     for issue in issues:
         typer.echo(f"{'✗' if issue.level == 'error' else '!'} [{issue.rule}] {issue.message}")
     errors = sum(issue.level == "error" for issue in issues)
@@ -82,6 +92,7 @@ def status(root: RootOption = None) -> None:
         direction = store.load()
         measurements = store.measurements()
         issues = rules.check(direction, measurements, store.dir)
+    registry.register(store.root)
     typer.echo(summary.render(direction, measurements, issues))
 
 
@@ -95,6 +106,7 @@ def context(
         direction = store.load()
         measurements = store.measurements()
         issues = rules.check(direction, measurements, store.dir)
+    registry.register(store.root)
     typer.echo(summary.context(direction, measurements, issues, brief=brief))
 
 

@@ -13,6 +13,16 @@ def fixed_today(monkeypatch: pytest.MonkeyPatch) -> dt.date:
     return TODAY
 
 
+@pytest.fixture(autouse=True)
+def isolated_registry(
+    tmp_path_factory: pytest.TempPathFactory, monkeypatch: pytest.MonkeyPatch
+) -> Path:
+    """Keep the portfolio registry out of the real home directory."""
+    config = tmp_path_factory.mktemp("config")
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(config))
+    return config
+
+
 @pytest.fixture
 def repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """An empty repository as the current directory."""

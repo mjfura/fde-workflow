@@ -9,8 +9,10 @@ from fde_workflow_cli.model import (
     KpiKind,
     Measurement,
     NorthStar,
+    Outcome,
     PathStatus,
     StageName,
+    StageState,
 )
 from tests.helpers import sample_direction, write_recipe
 
@@ -159,3 +161,29 @@ def test_evidence_must_measure_a_window_after_activation(tmp_path: Path) -> None
 def test_stage_measurement_must_cover_the_stage(tmp_path: Path) -> None:
     late_historical = measured("2026-10-12", BaselineType.HISTORICAL, window_end="2026-09-30")
     assert "warning:S3" in check(tmp_path, sample_direction(), [late_historical])
+
+
+def test_kpi_is_due_after_a_full_window(tmp_path: Path) -> None:
+    old = measured("2026-09-14", BaselineType.HISTORICAL)
+    assert "warning:K6" in check(tmp_path, sample_direction(), [old])
+    [(kpi, last)] = rules.due_kpis(sample_direction(), [old])
+    assert (kpi.id, last.taken) == ("resolution-time", dt.date(2026, 9, 14))
+
+
+def test_kpi_is_not_due_within_its_window(tmp_path: Path) -> None:
+    recent = measured("2026-09-15", BaselineType.HISTORICAL)
+    assert "warning:K6" not in check(tmp_path, sample_direction(), [recent])
+
+
+def test_closed_projects_have_no_due_kpis(tmp_path: Path) -> None:
+    direction = sample_direction()
+    direction.stage = StageState(
+        current=StageName.CLOSED, entered=dt.date(2026, 10, 1), outcome=Outcome.COMPLETED
+    )
+    assert rules.due_kpis(direction, [measured("2026-01-01", BaselineType.LATE)]) == []
+
+
+def test_kpi_without_baseline_is_not_due(tmp_path: Path) -> None:
+    found = check(tmp_path, sample_direction(), [measured("2026-01-01")])
+    assert "warning:K3" in found
+    assert "warning:K6" not in found

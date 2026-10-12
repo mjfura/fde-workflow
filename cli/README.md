@@ -13,13 +13,19 @@ fde-workflow doctor                 # checks that everything is ready
 |---|---|
 | `init`, `detect` | Set up `.fde/`; inspect a repository's methodology and artifacts |
 | `status`, `context`, `validate` | Summaries for people and for Claude; rule checks |
+| `drift` | Specs, plans or other artifacts that no path links |
+| `report status\|close` | Markdown reports in `.fde/reports/` for the sponsor |
+| `portfolio`, `portfolio forget` | Every repository on this machine that uses the framework |
 | `project set` | The project's name, customer and sponsor |
 | `northstar set\|confirm` | The North Star |
-| `kpi add\|update\|measure` | KPIs, their recipes and measurements |
+| `kpi add\|update\|measure\|due` | KPIs, their recipes, measurements and the ones due |
 | `path add\|update\|move\|link\|confirm` | Paths and their links to execution work |
 | `stage set\|confirm\|criteria\|decide` | The project stage and its gates |
 | `decision add` | Other direction decisions |
-| `hook session-start` | Entry point of the plugin's SessionStart hook |
+| `hook session-start\|post-tool-use` | Entry points of the plugin's hooks |
 
-Run `fde-workflow <command> --help` for the options. Requires Python 3.13 or newer. Source and
+Run `fde-workflow <command> --help` for the options. `init`, `status`, `validate`, `context` and
+the SessionStart hook add the repository to the portfolio registry,
+`$XDG_CONFIG_HOME/fde-workflow/projects.json` (default `~/.config/fde-workflow/projects.json`),
+which holds repository paths only. Requires Python 3.13 or newer. Source and
 plugin: https://github.com/mjfura/fde-workflow

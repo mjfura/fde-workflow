@@ -1,8 +1,10 @@
 ---
 name: fde-workflow
-description: 'Entry point of the FDE direction framework for customer projects: shows where the project stands against its North Star, KPIs, paths and stage, and proposes the next action. Use it when the user asks "how are we doing?", "what is next?", "where does the project stand?", asks about the North Star, KPIs, baselines, paths, gate criteria or the project stage, wants to move the project to another stage, or wants to use the FDE framework in a repository. Also use it at the start of work in a repository with a .fde/ directory.'
+description: 'Entry point of the FDE direction framework for customer projects: shows where the project stands against its North Star, KPIs, paths and stage, and proposes the next action. Use it when the user asks "how are we doing?", "what is next?", "where does the project stand?", asks about the North Star, KPIs, baselines or paths, or wants to use the FDE framework in a repository. Also use it at the start of work in a repository with a .fde/ directory.'
 allowed-tools:
   - Bash(fde-workflow status)
+  - Bash(fde-workflow drift)
+  - Bash(fde-workflow kpi due)
   - Bash(fde-workflow validate)
   - Bash(fde-workflow context)
 ---
@@ -16,6 +18,8 @@ session before acting on it.
 
 1. Run `fde-workflow status`.
    - **Command not found:** use the `setup` skill first.
+   - **"No such command" for a command a skill names:** the CLI is older than the plugin; use the
+     `setup` skill to upgrade it.
    - **"No .fde/":** the framework is not set up in this repository. Offer the `adopt` skill and
      stop.
    - **`.fde/` cannot be read** (invalid YAML, a typo, an encoding problem, a broken log line):
@@ -25,29 +29,24 @@ session before acting on it.
 2. Run `fde-workflow validate` and propose **one** next action, the first that applies:
    1. **Errors (✗):** explain each and fix it with the CLI command it names.
    2. **No North Star, or an inferred one (N1, C1):** the `discovery` skill.
-   3. **Inferred stage (C1):** check the stage with the user against the evidence; once they agree,
-      `fde-workflow stage confirm --approved-by "<who>"`, or `fde-workflow stage set` to correct it.
+   3. **Inferred stage (C1):** the `stage` skill.
    4. **A KPI without baseline (K3) or with a changed recipe (K4):** the `kpi` skill, baseline mode.
-   5. **Stage without gate criteria (S1):** agree them now (see *Stage* below).
-   6. **A path in `measuring`:** the `kpi` skill to measure it, then the `path` skill to validate
+   5. **Stage without gate criteria (S1):** the `stage` skill.
+   6. **KPIs due (K6):** the `kpi` skill, to measure them.
+   7. **A path in `measuring`:** the `kpi` skill to measure it, then the `path` skill to validate
       or discard it.
-   7. **Inferred paths (C1):** the `path` skill to confirm or discard them.
-   8. **Primary KPI not measured in this stage (S3):** the `kpi` skill.
-   9. **Nothing pending:** summarise and ask what the user wants to work on next; new work goes
-      through the `path` skill's alignment check.
+   8. **Inferred paths (C1):** the `path` skill to confirm or discard them.
+   9. **Primary KPI not measured in this stage (S3):** the `kpi` skill.
+   10. **Nothing pending:** summarise and ask what the user wants to work on next; new work goes
+      through the `path` skill's alignment check. Mention drift (`fde-workflow drift`) if any.
 3. Answer in a few lines: the North Star, the stage, each KPI as baseline → latest → target, live
    paths, and the recommended action with the skill or command that does it.
 
-## Stage
+## Hand-overs
 
-- **Gate criteria** are agreed when entering a stage, with evidence that can be checked
-  (e.g. "primary KPI measured over 2 weeks of real use"), and recorded with
-  `fde-workflow stage criteria "<criterion>" "<criterion>"`. Changing agreed criteria needs
-  `--reason` and `--approved-by`.
-- **Gate decisions** are taken with the sponsor, against the criteria, with evidence:
-  `fde-workflow stage decide go|recycle|hold|kill --reason "<evidence>" --approved-by "<sponsor>"`
-  (`--to <stage>` skips stages on go). Never decide a gate on the user's behalf; propose it and
-  run the command once they confirm the sponsor agreed.
+- Stage gates, gate criteria, inferred stages: the `stage` skill.
+- Status update for the sponsor, closing report: the `report` skill.
+- All projects on this machine at a glance: `fde-workflow portfolio`.
 
 ## Rules
 

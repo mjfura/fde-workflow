@@ -3,6 +3,7 @@ name: kpi
 description: 'Define the KPIs of a customer project and measure them with reproducible recipes: baselines (historical or late), current values, and the measurement that validates a path, always recording external factors. Use it when the user wants to define, change or measure a KPI or metric, asks for a baseline, asks "how is KPI X doing?", or when a path is ready to be measured.'
 allowed-tools:
   - Bash(fde-workflow status)
+  - Bash(fde-workflow kpi due)
   - Bash(fde-workflow context)
 ---
 
@@ -44,6 +45,15 @@ Read `../fde-workflow/references/framework.md` (relative to this skill's directo
    if the user says so.
 4. Record it: `fde-workflow kpi measure <id> --value <n> --source "..." --factors "..."
    [--window-end ...]` (`--run` already records script results; add `--factors` to that call).
+
+## Due KPIs and delegation
+
+- `fde-workflow kpi due` lists the KPIs whose last measurement is a full window old (rule K6);
+  measure them so status reports and gates rely on current numbers.
+- For `query` recipes, or when finding the data takes exploration, delegate the measurement to
+  the `kpi-measurer` agent with the KPI id and the window end. It returns the value and its
+  evidence; you still ask about external factors and record the measurement. `script` recipes
+  you run yourself, with the user's consent, as described below.
 
 ## Baselines
 

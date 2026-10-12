@@ -47,7 +47,7 @@ Before recording it, test the statement with the user:
    `fde-workflow northstar set --statement "..." --beneficiary "..." --problem "..."
    --non-goal "..." --primary-kpi <id>`. Draft from `adopt`: update it the same way, then
    `fde-workflow northstar confirm --approved-by "<who>"` when the user confirms it.
-4. Agree the gate criteria of the current stage (see the `fde-workflow` skill, *Stage*).
+4. Agree the gate criteria of the current stage with the `stage` skill.
 5. Finish with `fde-workflow status` and a short summary.
 
 ## Rules

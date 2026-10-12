@@ -3,6 +3,7 @@ name: path
 description: 'Manage the paths of a customer project, the hypotheses that move its KPIs: check that new work (a feature, spec, plan or brainstorm in any methodology, such as superpowers or spec-kit) serves a path, open, link, measure, validate or discard paths, and confirm inferred ones. Use it when the user starts new work or a new feature, asks whether something is aligned with the North Star, says "let us open a path", "this is built", "we are dropping X", or when a spec or plan was just written.'
 allowed-tools:
   - Bash(fde-workflow status)
+  - Bash(fde-workflow drift)
   - Bash(fde-workflow context)
 ---
 
@@ -30,6 +31,9 @@ Then hand over to the user's methodology: this skill never writes specs or plans
    (repeat `--expects` per KPI).
 
 ## Link execution work
+
+When a spec or plan is written in the artifact folders without a path, the plugin's hook asks you
+to do this; also check `fde-workflow drift` from time to time.
 
 `fde-workflow path link <path-id> <file-or-url>...` for specs, plans, PRs and issues. Artifacts
 from before the framework: `fde-workflow path link --pre-framework <file>...`.

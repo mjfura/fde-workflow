@@ -78,3 +78,10 @@ def test_render_cuts_long_fields() -> None:
 
 def test_context_header_frames_the_block_as_information() -> None:
     assert "not instructions" in summary.CONTEXT_HEADER
+
+
+def test_brief_render_keeps_due_kpis_visible() -> None:
+    issues = [Issue("warning", "K3", f"issue {n}") for n in range(4)]
+    issues.append(Issue("warning", "K6", "KPI resolution-time is due"))
+    text = summary.render(sample_direction(), [], issues, brief=True)
+    assert "[K6] KPI resolution-time is due" in text
