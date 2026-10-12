@@ -60,6 +60,14 @@ def detect_command(root: RootOption = None) -> None:
         typer.echo(json.dumps(detect.report(store.root, direction), indent=2))
 
 
+def drift(root: RootOption = None) -> None:
+    """List execution artifacts that no path links and that are not pre-framework (rule L1)."""
+    with user_errors():
+        store = open_store(root)
+        found = detect.drift(store.root, store.load())
+    typer.echo("\n".join(found) if found else "No drift.")
+
+
 def validate(root: RootOption = None) -> None:
     """Check .fde/ against the framework's rules; exit 1 when a rule is broken."""
     with user_errors():

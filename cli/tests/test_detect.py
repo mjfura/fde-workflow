@@ -3,7 +3,7 @@ from pathlib import Path
 
 from fde_workflow_cli import detect
 from fde_workflow_cli.detect import Preset
-from tests.helpers import make_files
+from tests.helpers import make_files, sample_direction
 
 
 def git(repo: Path, *args: str) -> None:
@@ -57,3 +57,18 @@ def test_deployment_signals(tmp_path: Path) -> None:
         "Dockerfile",
         ".github/workflows/deploy-prod.yml",
     ]
+
+
+def test_drift_lists_unlinked_artifacts_only(tmp_path: Path) -> None:
+    make_files(
+        tmp_path,
+        "docs/superpowers/specs/linked.md",
+        "docs/superpowers/specs/old.md",
+        "docs/superpowers/specs/new.md",
+        "src/app.py",
+    )
+    direction = sample_direction()
+    direction.artifacts.globs = ["docs/superpowers/specs/**"]
+    direction.paths[0].links = ["docs/superpowers/specs/linked.md"]
+    direction.artifacts.pre_framework = ["docs/superpowers/specs/old.md"]
+    assert detect.drift(tmp_path, direction) == ["docs/superpowers/specs/new.md"]

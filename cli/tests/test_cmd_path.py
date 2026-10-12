@@ -121,3 +121,12 @@ def test_confirming_twice_records_one_decision(fde: Path) -> None:
     ok("path", "confirm", "auto-triage")
     assert "already confirmed" in ok("path", "confirm", "auto-triage").output
     assert len(decisions(fde)) == 1
+
+
+def test_drift_command(repo: Path) -> None:
+    make_files(repo, "docs/superpowers/specs/a.md")
+    ok("init")
+    assert "No drift." not in ok("drift").output
+    assert "docs/superpowers/specs/a.md" in ok("drift").output
+    ok("path", "link", "--pre-framework", "docs/superpowers/specs/a.md")
+    assert "No drift." in ok("drift").output

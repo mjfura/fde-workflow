@@ -50,6 +50,7 @@ def doctor() -> None:
 
 app.command()(project.init)
 app.command("detect")(project.detect_command)
+app.command()(project.drift)
 app.command()(project.validate)
 app.command()(project.status)
 app.command()(project.context)

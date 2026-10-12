@@ -102,6 +102,15 @@ def linked_to(direction: Direction | None, relative: str) -> str | None:
     return None
 
 
+def drift(root: Path, direction: Direction) -> list[str]:
+    """L1: artifacts matching the globs that no path links and that are not pre-framework."""
+    return [
+        relative
+        for relative in artifact_files(root, direction.artifacts.globs)
+        if linked_to(direction, relative) is None
+    ]
+
+
 def report(root: Path, direction: Direction | None) -> dict[str, object]:
     methodology = detect_methodology(root)
     globs = direction.artifacts.globs if direction else PRESET_GLOBS[methodology]
