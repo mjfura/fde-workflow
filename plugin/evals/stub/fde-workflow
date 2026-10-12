@@ -1,6 +1,11 @@
 #!/bin/sh
 # Fake fde-workflow CLI for the plugin evals: never does real work. EVAL_SCENARIO selects
-# the behaviour (ready | missing | not-ready); every call is appended to EVAL_STUB_LOG.
+# the behaviour; every call is appended to EVAL_STUB_LOG.
+#   ready | missing | not-ready   setup scenarios (CLI readiness)
+#   fresh                         .fde/ just initialised: no North Star, no KPIs
+#   kpi-no-baseline               North Star and a primary KPI with a query recipe, no baseline
+#   path-measuring                path auto-triage built and in measuring, no measurement since
+#   brownfield                    no .fde/ yet; superpowers specs and plans exist
 scenario="${EVAL_SCENARIO:-ready}"
 printf 'fde-workflow %s\n' "$*" >> "${EVAL_STUB_LOG:-./stub-calls.log}" 2>/dev/null || true
 
@@ -8,6 +13,39 @@ if [ "$scenario" = missing ]; then
   echo "sh: fde-workflow: command not found" >&2
   exit 127
 fi
+
+no_fde() {
+  echo "Error: No .fde/ in $(pwd): run \`fde-workflow init\` (or the adopt skill) first." >&2
+  exit 1
+}
+
+status() {
+  case "$scenario" in
+    fresh)
+      printf '%s\n' "Project: acme-support" "North Star: not defined" \
+        "Stage: discovery since 2026-10-12" "KPIs: none" "Paths: none" "Issues:" \
+        "  ! [N1] No North Star yet: define it with the discovery skill." \
+        "  ! [S1] Stage discovery has no gate criteria: agree them with the sponsor now, not when leaving the stage." ;;
+    kpi-no-baseline)
+      printf '%s\n' "Project: acme-support · sponsor Jane Doe" \
+        "North Star: ACME customers resolve their issues without waiting for an agent" \
+        "  Primary KPI: resolution-time" "Stage: discovery since 2026-10-01" \
+        "  Gate: North Star agreed and every KPI has a baseline" "KPIs:" \
+        "  resolution-time (primary): no baseline → target ≤ 30 min" "Paths: none" "Issues:" \
+        "  ! [K3] KPI resolution-time has no baseline: measure it before work that should move it starts." ;;
+    path-measuring)
+      printf '%s\n' "Project: acme-support · sponsor Jane Doe" \
+        "North Star: ACME customers resolve their issues without waiting for an agent" \
+        "  Primary KPI: resolution-time" "Stage: mvp since 2026-10-01" \
+        "  Gate: Primary KPI measured over 2 weeks of real use" "KPIs:" \
+        "  resolution-time (primary): baseline 45 min (historical) → target ≤ 30 min" "Paths:" \
+        "  auto-triage [measuring]: If tickets are classified on arrival, median resolution time drops 20% (resolution-time → 36)" \
+        "Issues:" \
+        "  ! [S3] Primary KPI resolution-time has no measurement since entering mvp on 2026-10-01." ;;
+    brownfield) no_fde ;;
+    *) no_fde ;;
+  esac
+}
 
 case "${1:-}" in
   --version) echo "fde-workflow 0.1.0" ;;
@@ -18,8 +56,61 @@ case "${1:-}" in
       echo "Not ready: 1 problem(s)."
       exit 1
     fi
+    echo "✓ No .fde/ here yet: the adopt skill sets one up"
     echo "Ready."
     ;;
-  ""|--help|-h) echo "Usage: fde-workflow [OPTIONS] COMMAND [ARGS]...  Commands: doctor" ;;
+  status) status ;;
+  context)
+    if [ "$scenario" = brownfield ] || [ "$scenario" = ready ] || [ "$scenario" = not-ready ]; then no_fde; fi
+    echo "FDE direction of this repository (.fde/). Keep the work aligned with it; change it only through the fde-workflow skills and CLI."
+    echo
+    status
+    ;;
+  validate)
+    status | sed -n 's/^  \([!✗]\)/\1/p'
+    echo "Valid with 1 warning(s)."
+    ;;
+  detect)
+    if [ "$scenario" = brownfield ]; then
+      cat <<'JSON'
+{
+  "root": ".",
+  "fde_initialised": false,
+  "methodology": "superpowers",
+  "globs": ["docs/superpowers/specs/**", "docs/superpowers/plans/**"],
+  "readme": "README.md",
+  "deployment_signals": ["Dockerfile", ".github/workflows/deploy.yml"],
+  "artifacts": [
+    {"path": "docs/superpowers/plans/2026-08-20-auto-triage.md", "first_commit": "2026-08-20", "linked_to": null},
+    {"path": "docs/superpowers/specs/2026-08-18-auto-triage-design.md", "first_commit": "2026-08-18", "linked_to": null},
+    {"path": "docs/superpowers/specs/2026-09-10-answer-suggestions-design.md", "first_commit": "2026-09-10", "linked_to": null}
+  ]
+}
+JSON
+    else
+      echo '{"root": ".", "fde_initialised": true, "methodology": "superpowers", "globs": [], "readme": null, "deployment_signals": [], "artifacts": []}'
+    fi
+    ;;
+  kpi)
+    if [ "${2:-}" = measure ] && ! printf '%s' "$*" | grep -q -- '--value'; then
+      printf '%s\n' "query recipe of resolution-time, window 2026-09-15 to 2026-10-12:" "" \
+        "select median(minutes_to_resolution) from zendesk.tickets" \
+        "where solved_at between '2026-09-15' and '2026-10-12'" "" \
+        "Take the measurement, then record it with --value N --source TEXT."
+    else
+      echo "Recorded."
+    fi
+    ;;
+  path)
+    if [ "${2:-}" = move ] && [ "${4:-}" = validated ] && [ "$scenario" = path-measuring ]; then
+      echo "Error: Not saved: the change breaks the framework's rules:" >&2
+      echo "  [P2] Path auto-triage cannot be validated without evidence: it needs a measurement of resolution-time taken after it became active." >&2
+      exit 1
+    fi
+    echo "Saved."
+    ;;
+  init|northstar|stage|decision) echo "Saved." ;;
+  hook) ;;
+  ""|--help|-h) echo "Usage: fde-workflow [OPTIONS] COMMAND [ARGS]...  Commands: doctor init detect validate status context northstar kpi path stage decision hook" ;;
   *) echo "Error: No such command '$1'." >&2; exit 2 ;;
 esac

@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: kpi-baseline-declares-type-and-factors
+context:
+  scaffold_script: fixture.sh
