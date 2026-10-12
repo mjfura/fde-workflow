@@ -6,7 +6,7 @@ from typing import Annotated
 import typer
 
 from fde_workflow_cli import doctor as checks
-from fde_workflow_cli.commands import project
+from fde_workflow_cli.commands import kpi, project
 
 COMMAND = "fde-workflow"
 DIST_NAME = "fde-workflow-cli"
@@ -53,3 +53,4 @@ app.command("detect")(project.detect_command)
 app.command()(project.validate)
 app.command()(project.status)
 app.command()(project.context)
+app.add_typer(kpi.app, name="kpi")
