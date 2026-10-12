@@ -3,6 +3,11 @@
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
+
+from fde_workflow_cli.errors import FdeError
+from fde_workflow_cli.model import SCHEMA_VERSION
+from fde_workflow_cli.store import Store, locate
 
 
 @dataclass(frozen=True)
@@ -21,7 +26,19 @@ def check_python() -> CheckResult:
     return CheckResult(ok=False, message=f"Python {found} is too old: install Python 3.13 or newer")
 
 
-CHECKS: list[Callable[[], CheckResult]] = [check_python]
+def check_direction() -> CheckResult:
+    store = Store(locate(Path.cwd()))
+    if not store.exists():
+        return CheckResult(ok=True, message="No .fde/ here yet: the adopt skill sets one up")
+    try:
+        store.load()
+    except FdeError as error:
+        first_line = str(error).splitlines()[0]
+        return CheckResult(ok=False, message=f".fde/ cannot be read: {first_line}")
+    return CheckResult(ok=True, message=f".fde/ uses schema {SCHEMA_VERSION}: {store.dir}")
+
+
+CHECKS: list[Callable[[], CheckResult]] = [check_python, check_direction]
 
 
 def run_checks() -> list[CheckResult]:
